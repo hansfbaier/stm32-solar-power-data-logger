@@ -100,7 +100,10 @@ void vLCDTask(void * pvArg)
   GUI_Text(52,160,"Development Board",White,Blue);
   while(1)
   {
-     vTaskDelay(1000);
+       GUI_Text(80,190,"FreeRTOS",White,Blue);
+       vTaskDelay(1000);
+       GUI_Text(80,190,"FreeRTOS",Red,Blue);
+       vTaskDelay(1000);
   }
 }
 
