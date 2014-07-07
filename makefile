@@ -48,7 +48,8 @@ TARGET_ARCH = -mcpu=cortex-m3 -mthumb
 
 INCLUDE_DIRS = -I . -I lib/STM32F10x_StdPeriph_Driver/inc\
  -I lib/STM32F10x_StdPeriph_Driver -I lib/CMSIS_CM3\
- -I lib/STM32_USB-FS-Device_Driver/inc
+ -I lib/STM32_USB-FS-Device_Driver/inc\
+ -I FreeRTOS/include -I FreeRTOS/portable/GCC/ARM_CM3/
 
 LIBRARY_DIRS = -L lib/STM32F10x_StdPeriph_Driver/\
  -L lib/STM32_USB-FS-Device_Driver
@@ -97,6 +98,9 @@ MAIN_OBJS = $(sort \
  $(patsubst %.cc,%.o,$(wildcard *.cc)) \
  $(patsubst %.c,%.o,$(wildcard *.c)) \
  $(patsubst %.s,%.o,$(wildcard *.s)) \
+ $(patsubst %.c,%.o,$(wildcard FreeRTOS/portable/GCC/ARM_CM3/*.c)) \
+ $(patsubst %.c,%.o,$(wildcard FreeRTOS/portable/MemMang/*.c)) \
+ $(patsubst %.c,%.o,$(wildcard FreeRTOS/*.c)) \
  $(patsubst %.c,%.o,$(wildcard lib/CMSIS_CM3/*.c)) \
  $(STARTUP_OBJ))
 
