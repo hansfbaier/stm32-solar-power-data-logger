@@ -97,14 +97,18 @@ void vLCDTask(void * pvArg)
 {
     LCD_Initializtion();
     LCD_Clear(Blue);
-    GUI_Text(68, 144, "HY-MiniSTM32V", White, Blue);
-    GUI_Text(52, 160, "Development Board", White, Blue);
+    LCD_DrawLine(0, 0, 240, 320, White);
+    
     while (1)
     {
-        GUI_Text(80, 190, "FreeRTOS", White, Blue);
-        vTaskDelay(1000);
-        GUI_Text(80, 190, "FreeRTOS", Red, Blue);
-        vTaskDelay(1000);
+        for (int x = 0; x < MAX_X; ++x)
+        {
+            for (int y = 0; y < MAX_Y; ++y)
+            {
+                LCD_SetPoint(x, y, x * y);
+                vTaskDelay(1);
+            }
+        }
     }
 }
 
