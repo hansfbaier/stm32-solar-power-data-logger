@@ -25,6 +25,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "GLCD.h"
+#include "ugui.h"
 
 /* Private define ------------------------------------------------------------*/
 #define LED_TASK_STACK_SIZE			( configMINIMAL_STACK_SIZE )
@@ -85,6 +86,16 @@ void vLEDTask(void * pvArg)
     }
 }
 
+void UserPixelSetFunction(UG_S16 x, UG_S16 y, UG_COLOR c)
+{
+    LCD_SetPoint(x, y, c);
+}
+
+UG_GUI gui;
+
+#define BOTTOM MAX_Y
+#define CONSOLE_Y MAX_Y/8
+
 /*******************************************************************************
  * Function Name  : vLCDTask
  * Description    : LED Task
@@ -96,19 +107,27 @@ void vLEDTask(void * pvArg)
 void vLCDTask(void * pvArg)
 {
     LCD_Initializtion();
-    LCD_Clear(Blue);
-    LCD_DrawLine(0, 0, 240, 320, White);
+    LCD_Clear(Black);
+    UG_Init (&gui, &UserPixelSetFunction, MAX_X, MAX_Y);
+    UG_SelectGUI(&gui);
+    UG_SetForecolor(White);
+    UG_SetBackcolor(Black);
+    UG_DrawCircle(MAX_X/2, MAX_Y/2, 30, White);
+    
+    UG_FontSelect(&FONT_8X8);
+    UG_PutString(MAX_X/2, MAX_Y/2, "Hello world!");
+
+    vTaskDelay(1000);
+    
+    UG_ConsoleSetArea(0, 0, MAX_X, CONSOLE_Y);
+    UG_ConsoleSetForecolor(C_GREEN_YELLOW);
+    UG_ConsoleSetBackcolor(C_BLACK);
+    UG_ConsolePutString("Done!\n");
     
     while (1)
     {
-        for (int x = 0; x < MAX_X; ++x)
-        {
-            for (int y = 0; y < MAX_Y; ++y)
-            {
-                LCD_SetPoint(x, y, x * y);
-                vTaskDelay(1);
-            }
-        }
+        UG_ConsolePutString("Tick...");
+        vTaskDelay(1000);
     }
 }
 
@@ -123,7 +142,7 @@ void vLCDTask(void * pvArg)
 static void prvSetupHardware(void)
 {
     /* Configure HCLK clock as SysTick clock source. */
-    SysTick_CLKSourceConfig( SysTick_CLKSource_HCLK);
+    SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
 }
 
 /*******************************************************************************
