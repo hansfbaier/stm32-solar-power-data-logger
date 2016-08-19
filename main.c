@@ -21,11 +21,14 @@
  *********************************************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
+#include <stdlib.h>
 #include "stm32f10x.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "GLCD.h"
 #include "ugui.h"
+#include "logging.h"
+#include "energygraph.h"
 
 /* Private define ------------------------------------------------------------*/
 #define LED_TASK_STACK_SIZE			( configMINIMAL_STACK_SIZE )
@@ -88,13 +91,13 @@ void vLEDTask(void * pvArg)
 
 void UserPixelSetFunction(UG_S16 x, UG_S16 y, UG_COLOR c)
 {
-    LCD_SetPoint(x, y, c);
+    uint16_t lcdColor = RGB565CONVERT((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF);
+    LCD_SetPoint(x, y, lcdColor);
 }
 
-UG_GUI gui;
-
-#define BOTTOM MAX_Y
-#define CONSOLE_Y MAX_Y/8
+extern UG_GUI gui;
+extern EnergyLogger solarLogger;
+extern EnergyLogger houseLogger;
 
 /*******************************************************************************
  * Function Name  : vLCDTask
@@ -112,21 +115,24 @@ void vLCDTask(void * pvArg)
     UG_SelectGUI(&gui);
     UG_SetForecolor(White);
     UG_SetBackcolor(Black);
-    UG_DrawCircle(MAX_X/2, MAX_Y/2, 30, White);
     
-    UG_FontSelect(&FONT_8X8);
-    UG_PutString(MAX_X/2, MAX_Y/2, "Hello world!");
+    UG_FontSelect(&FONT_6X8);
 
     vTaskDelay(1000);
     
-    UG_ConsoleSetArea(0, 0, MAX_X, CONSOLE_Y);
-    UG_ConsoleSetForecolor(C_GREEN_YELLOW);
+    UG_ConsoleSetArea(0, 0, MAX_X, MAX_BIN_Y);
+    UG_ConsoleSetForecolor(C_GREEN);
     UG_ConsoleSetBackcolor(C_BLACK);
-    UG_ConsolePutString("Done!\n");
+    UG_ConsolePutString("Init Done!\n");
     
     while (1)
     {
-        UG_ConsolePutString("Tick...");
+        solarLogger.currentImps = rand() % MAX_DISP_IMPS;
+        houseLogger.currentImps = rand() % MAX_DISP_IMPS;
+        newBin(&solarLogger);
+        newBin(&houseLogger);
+        plotLastBins();
+
         vTaskDelay(1000);
     }
 }
