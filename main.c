@@ -43,14 +43,6 @@ void GPIO_Configuration(void);
 void vLCDTask(void * pvArg);
 void vLEDTask(void * pvArg);
 
-/*******************************************************************************
- * Function Name  : main
- * Description    : Main program
- * Input          : None
- * Output         : None
- * Return         : None
- * Attention		 : None
- *******************************************************************************/
 int main(void)
 {
     prvSetupHardware();
@@ -64,17 +56,8 @@ int main(void)
     return 0;
 }
 
-/*******************************************************************************
- * Function Name  : vLEDTask
- * Description    : LED Task
- * Input          : None
- * Output         : None
- * Return         : None
- * Attention		 : None
- *******************************************************************************/
 void vLEDTask(void * pvArg)
 {
-    GPIO_Configuration();
     while (1)
     {
         /* LED1-ON LED2-OFF */
@@ -99,14 +82,6 @@ extern UG_GUI gui;
 extern EnergyLogger solarLogger;
 extern EnergyLogger houseLogger;
 
-/*******************************************************************************
- * Function Name  : vLCDTask
- * Description    : LED Task
- * Input          : None
- * Output         : None
- * Return         : None
- * Attention		 : None
- *******************************************************************************/
 void vLCDTask(void * pvArg)
 {
     LCD_Initializtion();
@@ -137,28 +112,13 @@ void vLCDTask(void * pvArg)
     }
 }
 
-/*******************************************************************************
- * Function Name  : prvSetupHardware
- * Description    : None
- * Input          : None
- * Output         : None
- * Return         : None
- * Attention		 : None
- *******************************************************************************/
 static void prvSetupHardware(void)
 {
     /* Configure HCLK clock as SysTick clock source. */
     SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
+    GPIO_Configuration();
 }
 
-/*******************************************************************************
- * Function Name  : GPIO_Configuration
- * Description    : Configure GPIO Pin
- * Input          : None
- * Output         : None
- * Return         : None
- * Attention		 : None
- *******************************************************************************/
 void GPIO_Configuration(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -187,6 +147,7 @@ void GPIO_Configuration(void)
     GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
+
 #ifdef  USE_FULL_ASSERT
 
 /**
@@ -207,7 +168,3 @@ void assert_failed(uint8_t* file, uint32_t line)
     }
 }
 #endif
-
-/*********************************************************************************************************
- END FILE
- *********************************************************************************************************/
