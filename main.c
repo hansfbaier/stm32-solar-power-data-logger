@@ -21,7 +21,6 @@
  *********************************************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
-#include <stdlib.h>
 #include "stm32f10x.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -29,6 +28,7 @@
 #include "ugui.h"
 #include "logging.h"
 #include "energygraph.h"
+#include "printf.h"
 
 /* Private define ------------------------------------------------------------*/
 #define LED_TASK_STACK_SIZE			( configMINIMAL_STACK_SIZE )
@@ -39,9 +39,13 @@
 
 /* Private function prototypes -----------------------------------------------*/
 static void prvSetupHardware(void);
+void NVIC_Configuration(void);
 void GPIO_Configuration(void);
+void USART_Configuration(void);
+void RTC_Init(void);
 void vLCDTask(void * pvArg);
 void vLEDTask(void * pvArg);
+void putchar(char ch);
 
 int main(void)
 {
@@ -116,7 +120,26 @@ static void prvSetupHardware(void)
 {
     /* Configure HCLK clock as SysTick clock source. */
     SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
+    //NVIC_Configuration();
     GPIO_Configuration();
+    //USART_Configuration();
+    //init_printf(NULL, putchar);
+    //RTC_Init();
+}
+
+void NVIC_Configuration(void)
+{
+  NVIC_InitTypeDef NVIC_InitStructure;
+
+  /* Configure one bit for preemption priority */
+  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+
+  /* Enable the RTC Interrupt */
+  NVIC_InitStructure.NVIC_IRQChannel = RTC_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
 }
 
 void GPIO_Configuration(void)
@@ -145,6 +168,140 @@ void GPIO_Configuration(void)
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
     GPIO_Init(GPIOC, &GPIO_InitStructure);
+}
+
+void USART_Configuration(void)
+{ 
+  GPIO_InitTypeDef GPIO_InitStructure;
+  USART_InitTypeDef USART_InitStructure; 
+
+  RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOA | RCC_APB2Periph_USART1,ENABLE);
+  /*
+  *  USART1_TX -> PA9 , USART1_RX ->    PA10
+  */                
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;          
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP; 
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz; 
+  GPIO_Init(GPIOA, &GPIO_InitStructure);           
+
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;            
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;  
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz; 
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+  USART_InitStructure.USART_BaudRate = 115200;
+  USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+  USART_InitStructure.USART_StopBits = USART_StopBits_1;
+  USART_InitStructure.USART_Parity = USART_Parity_No;
+  USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+  USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+
+  USART_Init(USART1, &USART_InitStructure); 
+  USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+  USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
+  USART_Cmd(USART1, ENABLE);
+  
+  USART_SendData(USART1, '@');
+  USART_SendData(USART1, 'H');
+  USART_SendData(USART1, 'B');
+  USART_SendData(USART1, '\r');
+  USART_SendData(USART1, '\n');
+}
+
+void RTC_Init(void)
+{
+    if (BKP_ReadBackupRegister(BKP_DR1) != 0xA5A5)
+    {
+      /* Backup data register value is not correct or not yet programmed (when
+         the first time the program is executed) */
+    
+      printf("\r\n\n RTC not yet configured....");
+    
+      /* RTC Configuration */
+      RTC_Configuration();
+    
+      printf("\r\n RTC configured....");
+    
+      /* Adjust time by values entered by the user on the hyperterminal */
+      Time_Adjust();
+    
+      BKP_WriteBackupRegister(BKP_DR1, 0xA5A5);
+    }
+    else
+    {
+      /* Check if the Power On Reset flag is set */
+      if (RCC_GetFlagStatus(RCC_FLAG_PORRST) != RESET)
+      {
+        printf("\r\n\n Power On Reset occurred....");
+      }
+      /* Check if the Pin Reset flag is set */
+      else if (RCC_GetFlagStatus(RCC_FLAG_PINRST) != RESET)
+      {
+        printf("\r\n\n External Reset occurred....");
+      }
+    
+      printf("\r\n No need to configure RTC....");
+      /* Wait for RTC registers synchronization */
+      RTC_WaitForSynchro();
+    
+      /* Enable the RTC Second */
+      RTC_ITConfig(RTC_IT_SEC, ENABLE);
+      /* Wait until last write operation on RTC registers has finished */
+      RTC_WaitForLastTask();
+    }
+}
+
+void RTC_Configuration(void)
+{
+  /* Enable PWR and BKP clocks */
+  RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);
+
+  /* Allow access to BKP Domain */
+  PWR_BackupAccessCmd(ENABLE);
+
+  /* Reset Backup Domain */
+  BKP_DeInit();
+
+  /* Enable LSE */
+  RCC_LSEConfig(RCC_LSE_ON);
+  /* Wait till LSE is ready */
+  while (RCC_GetFlagStatus(RCC_FLAG_LSERDY) == RESET)
+  {}
+
+  /* Select LSE as RTC Clock Source */
+  RCC_RTCCLKConfig(RCC_RTCCLKSource_LSE);
+
+  /* Enable RTC Clock */
+  RCC_RTCCLKCmd(ENABLE);
+
+  /* Wait for RTC registers synchronization */
+  RTC_WaitForSynchro();
+
+  /* Wait until last write operation on RTC registers has finished */
+  RTC_WaitForLastTask();
+
+  /* Enable the RTC Second */
+  RTC_ITConfig(RTC_IT_SEC, ENABLE);
+
+  /* Wait until last write operation on RTC registers has finished */
+  RTC_WaitForLastTask();
+
+  /* Set RTC prescaler: set RTC period to 1sec */
+  RTC_SetPrescaler(32767); /* RTC period = RTCCLK/RTC_PR = (32.768 KHz)/(32767+1) */
+
+  /* Wait until last write operation on RTC registers has finished */
+  RTC_WaitForLastTask();
+}
+
+void putchar(char ch)
+{
+  /* Place your implementation of fputc here */
+  /* e.g. write a character to the USART */
+  USART_SendData(USART1, (uint8_t) ch);
+
+  /* Loop until the end of transmission */
+  while (USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET)
+  {}
 }
 
 

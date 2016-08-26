@@ -22,7 +22,7 @@ STARTUP_FILE = stm32f10x_hd
 HSE_VALUE = 8000000L
 
 # Enable debug compilation
-#DEBUG = 1
+DEBUG = 1
 
 # [OPTIONAL] Set the serial details for bootloading
 STM32LDR_PORT = /dev/ttyUSB0
