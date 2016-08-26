@@ -201,11 +201,11 @@ void USART_Configuration(void)
   USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
   USART_Cmd(USART1, ENABLE);
   
-  USART_SendData(USART1, '@');
-  USART_SendData(USART1, 'H');
-  USART_SendData(USART1, 'B');
-  USART_SendData(USART1, '\r');
-  USART_SendData(USART1, '\n');
+  putchar('@');
+  putchar('H');
+  putchar('B');
+  putchar('\r');
+  putchar('\n');
 }
 
 void RTC_Init(void)
