@@ -30,6 +30,7 @@
 #include "logging.h"
 #include "energygraph.h"
 #include "printf.h"
+#include "rtc.h"
 
 /* Private define ------------------------------------------------------------*/
 #define LED_TASK_STACK_SIZE			( configMINIMAL_STACK_SIZE )
@@ -125,9 +126,6 @@ static void prvSetupHardware(void)
     USART_Configuration();
     init_printf(NULL, putf);
     printf("printf initialized\r\n");
-    putchar('x');
-    putchar('x');
-    putchar('x');
     RTC_Init();
 }
 

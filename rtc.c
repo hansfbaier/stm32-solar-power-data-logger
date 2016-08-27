@@ -7,14 +7,10 @@
 #include <stdint.h>
 #include "stm32f10x.h"
 #include "printf.h"
+#include "rtc.h"
 
 /* Private function prototypes -----------------------------------------------*/
-uint32_t Time_Regulate(void);
-void Time_Adjust(void);
-void Time_Show(void);
-void Time_Display(uint32_t TimeVar);
 uint8_t USART_Scanf(uint32_t value);
-
 __IO uint32_t TimeDisplay = 0;
 
 uint32_t Time_Regulate(void)
@@ -86,28 +82,6 @@ void Time_Display(uint32_t TimeVar)
   TSS = (TimeVar % 3600) % 60;
 
   printf("Time: %0.2d:%0.2d:%0.2d\r", THH, TMM, TSS);
-}
-
-/**
-  * @brief  Shows the current time (HH:MM:SS) on the Hyperterminal.
-  * @param  None
-  * @retval None
-  */   
-void Time_Show(void)
-{
-  printf("\n\r");
-
-  /* Infinite loop */
-  while (1)
-  {
-    /* If 1s has been elapsed */
-    if (TimeDisplay == 1)
-    {
-      /* Display current time */
-      Time_Display(RTC_GetCounter());
-      TimeDisplay = 0;
-    }
-  }
 }
 
 void RTC_IRQHandler(void)
