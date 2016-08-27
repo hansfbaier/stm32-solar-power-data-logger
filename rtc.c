@@ -81,7 +81,7 @@ void Time_Display(uint32_t TimeVar)
   /* Compute seconds */
   TSS = (TimeVar % 3600) % 60;
 
-  printf("Time: %0.2d:%0.2d:%0.2d\r", THH, TMM, TSS);
+  printf("Time: %02d:%02d:%02d\r", THH, TMM, TSS);
 }
 
 void RTC_IRQHandler(void)
