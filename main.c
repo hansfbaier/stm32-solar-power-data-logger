@@ -48,7 +48,8 @@ void RTC_Init(void);
 void vLCDTask(void * pvArg);
 void vLEDTask(void * pvArg);
 void putchar(char ch);
-static void putf(void * dummy, char ch);
+static void putf_serial(void * dummy, char ch);
+static void putf_gui(void * dummy, char ch);
 
 int main(void)
 {
@@ -67,11 +68,12 @@ void vLEDTask(void * pvArg)
 {
     while (1)
     {
-        printf("Current Time: %s\r\n", Time_As_String());
+        printf("%s\r\n", Time_As_String());
         /* LED1-ON */
         GPIO_SetBits(GPIOB, GPIO_Pin_0);
         vTaskDelay(1000);
 
+        printf("%s\r\n", Time_As_String());
         /* LED1-OFF */
         GPIO_ResetBits(GPIOB, GPIO_Pin_0);
         vTaskDelay(1000);
@@ -125,9 +127,9 @@ static void prvSetupHardware(void)
     NVIC_Configuration();
     GPIO_Configuration();
     USART_Configuration();
-    init_printf(NULL, putf);
-    printf("printf initialized\r\n");
+    init_printf(NULL, putf_serial);
     RTC_Init();
+    init_printf(NULL, putf_gui);
 }
 
 void NVIC_Configuration(void)
@@ -204,9 +206,13 @@ void USART_Configuration(void)
   USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
   USART_Cmd(USART1, ENABLE);
   
-  putchar('@');
-  putchar('H');
-  putchar('B');
+  putchar('U');
+  putchar('A');
+  putchar('R');
+  putchar('T');
+  putchar(' ');
+  putchar('O');
+  putchar('K');
   putchar('\r');
   putchar('\n');
 }
@@ -307,9 +313,17 @@ void putchar(char ch)
   {}
 }
 
-static void putf(void *dummy, char ch)
+static void putf_serial(void *dummy, char ch)
 {
     putchar(ch);
+}
+
+static void putf_gui(void *dummy, char ch)
+{
+    char buf[2];
+    buf[0] = ch;
+    buf[1] = 0;
+    UG_ConsolePutString(buf);
 }
 
 
