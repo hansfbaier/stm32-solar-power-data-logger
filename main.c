@@ -79,7 +79,6 @@ int main(void)
       printf("-- Please connect a SD card \r\n");
       while(SD_Detect()!=SD_PRESENT);
       printf("-- SD card connected\r\n");
-      vTaskDelay(1000);
     }
 
     f_mount(0, &fs); 
@@ -101,7 +100,7 @@ int main(void)
       printf("Demo.TXT exists\r\n");
     }
 
-    //scan_files(path);
+    scan_files(path);
     SD_TotalSize();
     
     xTaskCreate(vLEDTask, (signed char * ) NULL, LED_TASK_STACK_SIZE, NULL,
@@ -423,14 +422,7 @@ FRESULT scan_files (char* path)
 #else
             fn = fno.fname;
 #endif
-            if (fno.fattrib & AM_DIR) {
-                sprintf(&path[i], "/%s", fn);
-                res = scan_files(path);
-                if (res != FR_OK) break;
-                path[i] = 0;
-            } else {
-                printf("%s/%s \r\n", path, fn);
-            }
+            printf("%s/%s \r\n", path, fn);
         }
     }
 
