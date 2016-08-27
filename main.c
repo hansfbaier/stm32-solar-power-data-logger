@@ -67,18 +67,9 @@ uint8_t textFileBuffer[] = "Thank you for using HY-MiniSTM32V Development Board\
 int main(void)
 {
     prvSetupHardware();
-    xTaskCreate(vLEDTask, (signed char * ) NULL, LED_TASK_STACK_SIZE, NULL,
-            LED_TASK_PRIORITY, NULL);
-    xTaskCreate(vLCDTask, (signed char * ) NULL, LCD_TASK_STACK_SIZE, NULL,
-            LCD_TASK_PRIORITY, NULL);
-    /* Start the scheduler. */
-    vTaskStartScheduler();
-
-    return 0;
-}
-
-void vLEDTask(void * pvArg)
-{
+    
+    //f_mkfs(0, 1, 0);
+    
     if( SD_Detect() == SD_PRESENT )
     {
       printf("-- SD card detected\r\n");
@@ -110,17 +101,29 @@ void vLEDTask(void * pvArg)
       printf("Demo.TXT exists\r\n");
     }
 
-    scan_files(path);
+    //scan_files(path);
     SD_TotalSize();
     
+    xTaskCreate(vLEDTask, (signed char * ) NULL, LED_TASK_STACK_SIZE, NULL,
+            LED_TASK_PRIORITY, NULL);
+    xTaskCreate(vLCDTask, (signed char * ) NULL, LCD_TASK_STACK_SIZE, NULL,
+            LCD_TASK_PRIORITY, NULL);
+    /* Start the scheduler. */
+    vTaskStartScheduler();
+
+    return 0;
+}
+
+void vLEDTask(void * pvArg)
+{    
     while (1)
     {
-        printf("%s\r\n", Time_As_String());
+        //printf("%s\r\n", Time_As_String());
         /* LED1-ON */
         GPIO_SetBits(GPIOB, GPIO_Pin_0);
         vTaskDelay(1000);
 
-        printf("%s\r\n", Time_As_String());
+        //printf("%s\r\n", Time_As_String());
         /* LED1-OFF */
         GPIO_ResetBits(GPIOB, GPIO_Pin_0);
         vTaskDelay(1000);
@@ -175,7 +178,7 @@ static void prvSetupHardware(void)
     USART_Configuration();
     init_printf(NULL, putf_serial);
     RTC_Init();
-    init_printf(NULL, putf_gui);
+    //init_printf(NULL, putf_gui);
 }
 
 void NVIC_Configuration(void)
@@ -197,6 +200,7 @@ void NVIC_Configuration(void)
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
+  
 }
 
 void GPIO_Configuration(void)
@@ -258,6 +262,7 @@ void USART_Configuration(void)
   USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
   USART_Cmd(USART1, ENABLE);
   
+  putchar(' ');
   putchar('U');
   putchar('A');
   putchar('R');
