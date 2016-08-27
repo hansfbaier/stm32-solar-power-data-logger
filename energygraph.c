@@ -30,11 +30,6 @@ static void plotLastBin(EnergyLogger *logger)
     int binY = BOTTOM - yLength;
     
     char buffer[16];
-    UG_ConsolePutString("(");
-    UG_ConsolePutString(itoa(binX, buffer, 10));
-    UG_ConsolePutString(",");
-    UG_ConsolePutString(itoa(impsToDisplay, buffer, 10));
-    UG_ConsolePutString(")");
     
     UG_DrawLine(binX, BOTTOM, binX, binY, gui.fore_color);
 }

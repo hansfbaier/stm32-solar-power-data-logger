@@ -31,6 +31,8 @@
 #include "energygraph.h"
 #include "printf.h"
 #include "rtc.h"
+#include "sdio_sd.h"
+#include "ff.h"
 
 /* Private define ------------------------------------------------------------*/
 #define LED_TASK_STACK_SIZE			( configMINIMAL_STACK_SIZE )
@@ -50,6 +52,17 @@ void vLEDTask(void * pvArg);
 void putchar(char ch);
 static void putf_serial(void * dummy, char ch);
 static void putf_gui(void * dummy, char ch);
+FRESULT scan_files (char* path);
+int SD_TotalSize(void);
+
+
+FATFS fs;         /* Work area (file system object) for logical drive */
+FIL fsrc;         /* file objects */   
+FRESULT res;
+UINT br;
+
+char path[64]="0:";
+uint8_t textFileBuffer[] = "Thank you for using HY-MiniSTM32V Development Board\r\n";   
 
 int main(void)
 {
@@ -66,6 +79,40 @@ int main(void)
 
 void vLEDTask(void * pvArg)
 {
+    if( SD_Detect() == SD_PRESENT )
+    {
+      printf("-- SD card detected\r\n");
+    }
+    else
+    {
+      printf("-- Please connect a SD card \r\n");
+      while(SD_Detect()!=SD_PRESENT);
+      printf("-- SD card connected\r\n");
+      vTaskDelay(1000);
+    }
+
+    f_mount(0, &fs); 
+
+    res = f_open( &fsrc , "0:/Demo.TXT" , FA_CREATE_NEW | FA_WRITE);        
+
+    if ( res == FR_OK )
+    { 
+      /* Write buffer to file */
+      res = f_write(&fsrc, textFileBuffer, sizeof(textFileBuffer), &br);     
+ 
+      printf("Demo.TXT created\r\n");
+    
+      /*close file */
+      f_close(&fsrc);      
+    }
+    else if ( res == FR_EXIST )
+    {
+      printf("Demo.TXT exists\r\n");
+    }
+
+    scan_files(path);
+    SD_TotalSize();
+    
     while (1)
     {
         printf("%s\r\n", Time_As_String());
@@ -106,7 +153,6 @@ void vLCDTask(void * pvArg)
     UG_ConsoleSetArea(0, 0, MAX_X, MAX_BIN_Y);
     UG_ConsoleSetForecolor(C_GREEN);
     UG_ConsoleSetBackcolor(C_BLACK);
-    UG_ConsolePutString("Init Done!\n");
     
     while (1)
     {
@@ -142,6 +188,12 @@ void NVIC_Configuration(void)
   /* Enable the RTC Interrupt */
   NVIC_InitStructure.NVIC_IRQChannel = RTC_IRQn;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
+  
+  NVIC_InitStructure.NVIC_IRQChannel = SDIO_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
@@ -241,15 +293,15 @@ void RTC_Init(void)
       /* Check if the Power On Reset flag is set */
       if (RCC_GetFlagStatus(RCC_FLAG_PORRST) != RESET)
       {
-        printf("\r\n\n Power On Reset occurred....");
+        printf("\r\n\n Power On Reset");
       }
       /* Check if the Pin Reset flag is set */
       else if (RCC_GetFlagStatus(RCC_FLAG_PINRST) != RESET)
       {
-        printf("\r\n\n External Reset occurred....");
+        printf("\r\n\n External Reset");
       }
     
-      printf("\r\n No need to configure RTC....");
+      printf("\r\n No need to configure RTC");
       /* Wait for RTC registers synchronization */
       RTC_WaitForSynchro();
     
@@ -342,6 +394,63 @@ void __attribute((__naked__)) HardFault_Handler( void )
     );
 }
 
+FRESULT scan_files (char* path)
+{
+    FILINFO fno;
+    DIR dir;
+    int i;
+    char *fn;
+#if _USE_LFN
+    static char lfn[_MAX_LFN * (_DF1S ? 2 : 1) + 1];
+    fno.lfname = lfn;
+    fno.lfsize = sizeof(lfn);
+#endif
+
+    res = f_opendir(&dir, path);
+    if (res == FR_OK) {
+        i = strlen(path);
+        for (;;) {
+            res = f_readdir(&dir, &fno);
+            if (res != FR_OK || fno.fname[0] == 0) break;
+            if (fno.fname[0] == '.') continue;
+#if _USE_LFN
+            fn = *fno.lfname ? fno.lfname : fno.fname;
+#else
+            fn = fno.fname;
+#endif
+            if (fno.fattrib & AM_DIR) {
+                sprintf(&path[i], "/%s", fn);
+                res = scan_files(path);
+                if (res != FR_OK) break;
+                path[i] = 0;
+            } else {
+                printf("%s/%s \r\n", path, fn);
+            }
+        }
+    }
+
+    return res;
+}
+
+int SD_TotalSize(void)
+{
+    FATFS *fs;
+    DWORD fre_clust;        
+
+    res = f_getfree("0:", &fre_clust, &fs); 
+    if ( res==FR_OK ) 
+    {
+      /* Print free space in unit of MB (assuming 512 bytes/sector) */
+      printf("\r\n%d MB total drive space.\r\n"
+           "%d MB available.\r\n",
+           ( (fs->n_fatent - 2) * fs->csize ) / 2 /1024 , (fre_clust * fs->csize) / 2 /1024 );
+        
+      return ENABLE;
+    }
+    else 
+      return DISABLE;   
+}
+
 void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
 {
     /* These are volatile to try and prevent the compiler/linker optimising them
@@ -406,6 +515,11 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
     for( ;; );
 }
 
+void SDIO_IRQHandler(void)
+{
+  /* Process All SDIO Interrupt Sources */
+  SD_ProcessIRQSrc();
+}
 
 #ifdef  USE_FULL_ASSERT
 
