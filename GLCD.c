@@ -302,14 +302,14 @@ static void delay_ms(uint16_t ms)
 } 
 
 /*******************************************************************************
-* Function Name  : LCD_Initializtion
+* Function Name  : LCD_Initialization
 * Description    : Initialize TFT Controller.
 * Input          : None
 * Output         : None
 * Return         : None
 * Attention		 : None
 *******************************************************************************/
-void LCD_Initializtion(void)
+void LCD_Initialization(void)
 {
 	uint16_t DeviceCode;
 	
