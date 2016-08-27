@@ -62,10 +62,10 @@ COMPILE_OPTS = $(WARNINGS) $(TARGET_OPTS) $(MESSAGES) $(INCLUDE_DIRS) $(DEFINES)
 WARNINGS = -Wall -W -Wshadow -Wcast-qual -Wwrite-strings -Winline
 
 ifdef DEBUG
- TARGET_OPTS = -O0 -g3
+ TARGET_OPTS = -Os -g3
  DEBUG_MACRO = -DDEBUG
 else
- TARGET_OPTS = -O2 $(F_INLINE) $(F_INLINE_ONCE) $(F_UNROLL_LOOPS)
+ TARGET_OPTS = -Os $(F_INLINE) $(F_INLINE_ONCE) $(F_UNROLL_LOOPS)
  F_INLINE = -finline
  F_INLINE_ONCE = -finline-functions-called-once
  #F_UNROLL_LOOPS = -funroll-loops
@@ -114,6 +114,7 @@ all: $(MAIN_BIN)
 
 $(MAIN_OUT): $(MAIN_OBJS) $(FWLIB) $(USBLIB)
 	$(LD) $(LDFLAGS) $(TARGET_ARCH) $^ -o $@
+	arm-none-eabi-size $@
 
 $(MAIN_OBJS): $(wildcard *.h) $(wildcard lib/STM32F10x_StdPeriph_Driver/*.h)\
  $(wildcard lib/STM32F10x_StdPeriph_Driver/inc/*.h)\
@@ -122,7 +123,6 @@ $(MAIN_OBJS): $(wildcard *.h) $(wildcard lib/STM32F10x_StdPeriph_Driver/*.h)\
 
 $(MAIN_BIN): $(MAIN_OUT)
 	$(OBJCOPY) $(OBJCOPYFLAGS) $< $@
-
 
 # fwlib
 
