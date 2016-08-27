@@ -47,6 +47,7 @@ void RTC_Init(void);
 void vLCDTask(void * pvArg);
 void vLEDTask(void * pvArg);
 void putchar(char ch);
+static void putf(void * dummy, char ch);
 
 int main(void)
 {
@@ -65,14 +66,12 @@ void vLEDTask(void * pvArg)
 {
     while (1)
     {
-        /* LED1-ON LED2-OFF */
+        /* LED1-ON */
         GPIO_SetBits(GPIOB, GPIO_Pin_0);
-        GPIO_ResetBits(GPIOB, GPIO_Pin_1);
         vTaskDelay(1000);
 
-        /* LED1-OFF LED2-ON */
+        /* LED1-OFF */
         GPIO_ResetBits(GPIOB, GPIO_Pin_0);
-        GPIO_SetBits(GPIOB, GPIO_Pin_1);
         vTaskDelay(1000);
     }
 }
@@ -116,8 +115,6 @@ void vLCDTask(void * pvArg)
         vTaskDelay(1000);
     }
 }
-
-static void putf(void * dummy, char ch);
 
 static void prvSetupHardware(void)
 {
@@ -252,7 +249,7 @@ void RTC_Init(void)
       RTC_WaitForSynchro();
     
       /* Enable the RTC Second */
-      RTC_ITConfig(RTC_IT_SEC, ENABLE);
+      //RTC_ITConfig(RTC_IT_SEC, ENABLE);
       /* Wait until last write operation on RTC registers has finished */
       RTC_WaitForLastTask();
     }
@@ -288,7 +285,7 @@ void RTC_Configuration(void)
   RTC_WaitForLastTask();
 
   /* Enable the RTC Second */
-  RTC_ITConfig(RTC_IT_SEC, ENABLE);
+  //RTC_ITConfig(RTC_IT_SEC, ENABLE);
 
   /* Wait until last write operation on RTC registers has finished */
   RTC_WaitForLastTask();
@@ -311,7 +308,7 @@ void putchar(char ch)
   {}
 }
 
-static void putf(void * dummy, char ch)
+static void putf(void *dummy, char ch)
 {
     putchar(ch);
 }

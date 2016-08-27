@@ -110,6 +110,12 @@ void Time_Show(void)
   }
 }
 
+void RTC_IRQHandler(void)
+{
+    //GPIO_WriteBit(GPIOB, GPIO_Pin_1, !GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1));
+    //Time_Display(RTC_GetCounter());
+}
+
 uint8_t USART_Scanf(uint32_t value)
 {
   uint32_t index = 0;
