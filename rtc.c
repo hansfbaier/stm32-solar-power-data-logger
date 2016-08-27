@@ -42,11 +42,6 @@ uint32_t Time_Regulate(void)
   return((Tmp_HH*3600 + Tmp_MM*60 + Tmp_SS));
 }
 
-/**
-  * @brief  Adjusts time.
-  * @param  None
-  * @retval None
-  */
 void Time_Adjust(void)
 {
   /* Wait until last write operation on RTC registers has finished */
@@ -57,13 +52,10 @@ void Time_Adjust(void)
   RTC_WaitForLastTask();
 }
 
-/**
-  * @brief  Displays the current time.
-  * @param  TimeVar: RTC counter value.
-  * @retval None
-  */
-void Time_Display(uint32_t TimeVar)
+static char time_buf[9];
+char *Time_As_String()
 {
+  uint32_t TimeVar = RTC_GetCounter();
   uint32_t THH = 0, TMM = 0, TSS = 0;
   
   /* Reset RTC Counter when Time is 23:59:59 */
@@ -81,13 +73,14 @@ void Time_Display(uint32_t TimeVar)
   /* Compute seconds */
   TSS = (TimeVar % 3600) % 60;
 
-  printf("Time: %02d:%02d:%02d\r", THH, TMM, TSS);
+  sprintf(time_buf, "%02d:%02d:%02d", THH, TMM, TSS);
+  return time_buf;
 }
 
 void RTC_IRQHandler(void)
 {
     //GPIO_WriteBit(GPIOB, GPIO_Pin_1, !GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1));
-    //Time_Display(RTC_GetCounter());
+    //Time_As_String(RTC_GetCounter());
 }
 
 uint8_t USART_Scanf(uint32_t value)

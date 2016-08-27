@@ -67,7 +67,7 @@ void vLEDTask(void * pvArg)
 {
     while (1)
     {
-        Time_Display(RTC_GetCounter());
+        printf("Current Time: %s\r\n", Time_As_String());
         /* LED1-ON */
         GPIO_SetBits(GPIOB, GPIO_Pin_0);
         vTaskDelay(1000);

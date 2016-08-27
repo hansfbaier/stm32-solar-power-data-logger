@@ -9,6 +9,6 @@
 #define RTC_H_
 uint32_t Time_Regulate(void);
 void Time_Adjust(void);
-void Time_Display(uint32_t TimeVar);
+char *Time_As_String();
 
 #endif /* RTC_H_ */
