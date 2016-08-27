@@ -117,15 +117,21 @@ void vLCDTask(void * pvArg)
     }
 }
 
+static void putf(void * dummy, char ch);
+
 static void prvSetupHardware(void)
 {
     /* Configure HCLK clock as SysTick clock source. */
     SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
-    //NVIC_Configuration();
+    NVIC_Configuration();
     GPIO_Configuration();
-    //USART_Configuration();
-    //init_printf(NULL, putchar);
-    //RTC_Init();
+    USART_Configuration();
+    init_printf(NULL, putf);
+    printf("printf initialized\r\n");
+    putchar('x');
+    putchar('x');
+    putchar('x');
+    RTC_Init();
 }
 
 void NVIC_Configuration(void)
@@ -303,6 +309,11 @@ void putchar(char ch)
   /* Loop until the end of transmission */
   while (USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET)
   {}
+}
+
+static void putf(void * dummy, char ch)
+{
+    putchar(ch);
 }
 
 
