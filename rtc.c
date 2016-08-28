@@ -80,7 +80,8 @@ char *Time_As_String()
 void RTC_IRQHandler(void)
 {
     //GPIO_WriteBit(GPIOB, GPIO_Pin_1, !GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1));
-    //Time_As_String(RTC_GetCounter());
+    RTC_ClearITPendingBit(RTC_IT_SEC);
+    //printf("%s\r", Time_As_String());
 }
 
 uint8_t USART_Scanf(uint32_t value)

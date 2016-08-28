@@ -43,6 +43,7 @@
 
 /* Private function prototypes -----------------------------------------------*/
 static void prvSetupHardware(void);
+void EXTI_Configuration(void);
 void NVIC_Configuration(void);
 void GPIO_Configuration(void);
 void USART_Configuration(void);
@@ -172,12 +173,30 @@ static void prvSetupHardware(void)
 {
     /* Configure HCLK clock as SysTick clock source. */
     SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
-    NVIC_Configuration();
     GPIO_Configuration();
+    EXTI_Configuration();
+    NVIC_Configuration();
     USART_Configuration();
     init_printf(NULL, putf_serial);
     RTC_Init();
     //init_printf(NULL, putf_gui);
+}
+
+void EXTI_Configuration(void)
+{
+    EXTI_InitTypeDef EXTI_InitStructure;
+
+    EXTI_InitStructure.EXTI_Line = EXTI_Line0;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
+    
+    EXTI_InitStructure.EXTI_Line = EXTI_Line1;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    EXTI_Init(&EXTI_InitStructure);
 }
 
 void NVIC_Configuration(void)
@@ -189,7 +208,7 @@ void NVIC_Configuration(void)
 
   /* Enable the RTC Interrupt */
   NVIC_InitStructure.NVIC_IRQChannel = RTC_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
@@ -199,15 +218,26 @@ void NVIC_Configuration(void)
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
+
+  NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
   
+  NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
+ 
 }
 
 void GPIO_Configuration(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
-    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC,
-            ENABLE);
+    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC, ENABLE);
     /**
      *	LED1 -> PB0   LED2 -> PB1
      */
@@ -228,6 +258,17 @@ void GPIO_Configuration(void)
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
     GPIO_Init(GPIOC, &GPIO_InitStructure);
+    
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+    GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+    GPIO_Init(GPIOC, &GPIO_InitStructure);
+
 }
 
 void USART_Configuration(void)
@@ -310,7 +351,7 @@ void RTC_Init(void)
       RTC_WaitForSynchro();
     
       /* Enable the RTC Second */
-      //RTC_ITConfig(RTC_IT_SEC, ENABLE);
+      RTC_ITConfig(RTC_IT_SEC, ENABLE);
       /* Wait until last write operation on RTC registers has finished */
       RTC_WaitForLastTask();
     }
@@ -517,6 +558,25 @@ void SDIO_IRQHandler(void)
   /* Process All SDIO Interrupt Sources */
   SD_ProcessIRQSrc();
 }
+
+void EXTI0_IRQHandler(void)
+{
+    if (EXTI_GetITStatus(EXTI_Line0) != RESET)
+    {
+        addImp(&solarLogger);
+        EXTI_ClearITPendingBit(EXTI_Line0);
+    }
+}
+
+void EXTI1_IRQHandler(void)
+{
+    if (EXTI_GetITStatus(EXTI_Line1) != RESET)
+    {
+        addImp(&houseLogger);
+        EXTI_ClearITPendingBit(EXTI_Line1);
+    }
+}
+
 
 #ifdef  USE_FULL_ASSERT
 
