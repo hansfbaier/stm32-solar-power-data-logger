@@ -43,7 +43,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="fatfs|lib/CMSIS_CM3|lib/STM32F10x_StdPeriph_Driver|lib/STM32_USB-FS-Device_Driver|FreeRTOS" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="lib|fatfs|lib/CMSIS_CM3|lib/STM32F10x_StdPeriph_Driver|lib/STM32_USB-FS-Device_Driver|FreeRTOS" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="FreeRTOS"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="fatfs"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="lib/CMSIS_CM3"/>
