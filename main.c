@@ -32,8 +32,6 @@
 #include "energygraph.h"
 #include "printf.h"
 #include "rtc.h"
-#include "sdio_sd.h"
-#include "ff.h"
 #include "hardware-config.h"
 
 /* Private define ------------------------------------------------------------*/
@@ -50,56 +48,15 @@ void vLoggerTask(void * pvArg);
 void putchar(char ch);
 static void putf_serial(void * dummy, char ch);
 static void putf_gui(void * dummy, char ch);
-FRESULT scan_files (char* path);
-int SD_TotalSize(void);
 
 xQueueHandle impQueue  = NULL;
 xQueueHandle slotQueue = NULL;
 
-FATFS fs;         /* Work area (file system object) for logical drive */
-FIL fsrc;         /* file objects */   
-FRESULT res;
-UINT br;
-
-char path[64]="0:";
-uint8_t textFileBuffer[] = "Thank you for using HY-MiniSTM32V Development Board\r\n";   
-
 int main(void)
 {
     prvSetupHardware();
-        
-    if( SD_Detect() == SD_PRESENT )
-    {
-      printf("-- SD card detected\r\n");
-    }
-    else
-    {
-      printf("-- Please connect a SD card \r\n");
-      while(SD_Detect()!=SD_PRESENT);
-      printf("-- SD card connected\r\n");
-    }
-
-    f_mount(0, &fs); 
-
-    res = f_open( &fsrc , "0:/Demo.TXT" , FA_CREATE_NEW | FA_WRITE);        
-
-    if ( res == FR_OK )
-    { 
-      /* Write buffer to file */
-      res = f_write(&fsrc, textFileBuffer, sizeof(textFileBuffer), &br);     
- 
-      printf("Demo.TXT created\r\n");
     
-      /*close file */
-      f_close(&fsrc);      
-    }
-    else if ( res == FR_EXIST )
-    {
-      printf("Demo.TXT exists\r\n");
-    }
-
-    scan_files(path);
-    SD_TotalSize();
+    Init_Logging();
     
     xTaskCreate(vLoggerTask, (signed char * ) NULL, LOGGER_TASK_STACK_SIZE, NULL, LOGGER_TASK_PRIORITY, NULL);
     //xTaskCreate(vLCDTask,    (signed char * ) NULL, LCD_TASK_STACK_SIZE,    NULL, LCD_TASK_PRIORITY,    NULL);
@@ -219,62 +176,6 @@ static void putf_gui(void *dummy, char ch)
     buf[0] = ch;
     buf[1] = 0;
     UG_ConsolePutString(buf);
-}
-
-FRESULT scan_files (char* path)
-{
-    FILINFO fno;
-    DIR dir;
-    int i;
-    char *fn;
-#if _USE_LFN
-    static char lfn[_MAX_LFN * (_DF1S ? 2 : 1) + 1];
-    fno.lfname = lfn;
-    fno.lfsize = sizeof(lfn);
-#endif
-
-    res = f_opendir(&dir, path);
-    if (res == FR_OK) {
-        i = strlen(path);
-        for (;;) {
-            res = f_readdir(&dir, &fno);
-            if (res != FR_OK || fno.fname[0] == 0) break;
-            if (fno.fname[0] == '.') continue;
-#if _USE_LFN
-            fn = *fno.lfname ? fno.lfname : fno.fname;
-#else
-            fn = fno.fname;
-#endif
-            printf("%s/%s \r\n", path, fn);
-        }
-    }
-
-    return res;
-}
-
-int SD_TotalSize(void)
-{
-    FATFS *fs;
-    DWORD fre_clust;        
-
-    res = f_getfree("0:", &fre_clust, &fs); 
-    if ( res==FR_OK ) 
-    {
-      /* Print free space in unit of MB (assuming 512 bytes/sector) */
-      printf("\r\n%d MB total drive space.\r\n"
-           "%d MB available.\r\n",
-           ( (fs->n_fatent - 2) * fs->csize ) / 2 /1024 , (fre_clust * fs->csize) / 2 /1024 );
-        
-      return ENABLE;
-    }
-    else 
-      return DISABLE;   
-}
-
-
-void SDIO_IRQHandler(void)
-{
-  SD_ProcessIRQSrc();
 }
 
 static int dummy;
