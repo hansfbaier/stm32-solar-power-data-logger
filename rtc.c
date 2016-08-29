@@ -52,9 +52,10 @@ void Time_Adjust(void)
   RTC_WaitForLastTask();
 }
 
-static char time_buf[9];
 char *Time_As_String()
 {
+  static char time_buf[9];
+
   uint32_t TimeVar = RTC_GetCounter();
   uint32_t THH = 0, TMM = 0, TSS = 0;
   
@@ -77,13 +78,6 @@ char *Time_As_String()
   return time_buf;
 }
 
-void RTC_IRQHandler(void)
-{
-    //GPIO_WriteBit(GPIOB, GPIO_Pin_1, !GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1));
-    RTC_ClearITPendingBit(RTC_IT_SEC);
-    //printf("%s\r", Time_As_String());
-}
-
 uint8_t USART_Scanf(uint32_t value)
 {
   uint32_t index = 0;
@@ -92,8 +86,7 @@ uint8_t USART_Scanf(uint32_t value)
   while (index < 2)
   {
     /* Loop until RXNE = 1 */
-    while (USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET)
-    {}
+    while (USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET) { }
     tmp[index++] = (USART_ReceiveData(USART1));
     if ((tmp[index - 1] < 0x30) || (tmp[index - 1] > 0x39))
     {

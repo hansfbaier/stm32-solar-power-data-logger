@@ -423,22 +423,6 @@ static void putf_gui(void *dummy, char ch)
     UG_ConsolePutString(buf);
 }
 
-
-void __attribute((__naked__)) HardFault_Handler( void )
-{
-    __asm volatile
-    (
-        " tst lr, #4                                                \n"
-        " ite eq                                                    \n"
-        " mrseq r0, msp                                             \n"
-        " mrsne r0, psp                                             \n"
-        " ldr r1, [r0, #24]                                         \n"
-        " ldr r2, handler2_address_const                            \n"
-        " bx r2                                                     \n"
-        " handler2_address_const: .word prvGetRegistersFromStack    \n"
-    );
-}
-
 FRESULT scan_files (char* path)
 {
     FILINFO fno;
@@ -487,6 +471,62 @@ int SD_TotalSize(void)
     }
     else 
       return DISABLE;   
+}
+
+
+void SDIO_IRQHandler(void)
+{
+  SD_ProcessIRQSrc();
+}
+
+//#define FIVE_MINUTES (60 * 5)
+#define FIVE_MINUTES 3
+void RTC_IRQHandler(void)
+{
+    static int seconds = 0;
+    ++seconds;
+    if (FIVE_MINUTES == seconds)
+    {
+        newBin(&solarLogger);
+        newBin(&houseLogger);
+        seconds = 0;
+    }
+    
+    RTC_ClearITPendingBit(RTC_IT_SEC);
+    UG_PutString(MAX_X - 56, 0, Time_As_String());
+}
+
+void EXTI0_IRQHandler(void)
+{
+    if (EXTI_GetITStatus(EXTI_Line0) != RESET)
+    {
+        addImp(&solarLogger);
+        EXTI_ClearITPendingBit(EXTI_Line0);
+    }
+}
+
+void EXTI1_IRQHandler(void)
+{
+    if (EXTI_GetITStatus(EXTI_Line1) != RESET)
+    {
+        addImp(&houseLogger);
+        EXTI_ClearITPendingBit(EXTI_Line1);
+    }
+}
+
+void __attribute((__naked__)) HardFault_Handler( void )
+{
+    __asm volatile
+    (
+        " tst lr, #4                                                \n"
+        " ite eq                                                    \n"
+        " mrseq r0, msp                                             \n"
+        " mrsne r0, psp                                             \n"
+        " ldr r1, [r0, #24]                                         \n"
+        " ldr r2, handler2_address_const                            \n"
+        " bx r2                                                     \n"
+        " handler2_address_const: .word prvGetRegistersFromStack    \n"
+    );
 }
 
 void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
@@ -552,31 +592,6 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
     /* When the following line is hit, the variables contain the register values. */
     for( ;; );
 }
-
-void SDIO_IRQHandler(void)
-{
-  /* Process All SDIO Interrupt Sources */
-  SD_ProcessIRQSrc();
-}
-
-void EXTI0_IRQHandler(void)
-{
-    if (EXTI_GetITStatus(EXTI_Line0) != RESET)
-    {
-        addImp(&solarLogger);
-        EXTI_ClearITPendingBit(EXTI_Line0);
-    }
-}
-
-void EXTI1_IRQHandler(void)
-{
-    if (EXTI_GetITStatus(EXTI_Line1) != RESET)
-    {
-        addImp(&houseLogger);
-        EXTI_ClearITPendingBit(EXTI_Line1);
-    }
-}
-
 
 #ifdef  USE_FULL_ASSERT
 
