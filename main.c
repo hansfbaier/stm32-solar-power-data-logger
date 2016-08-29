@@ -57,8 +57,8 @@ static void putf_gui(void * dummy, char ch);
 FRESULT scan_files (char* path);
 int SD_TotalSize(void);
 
-xQueueHandle impQueue;
-xQueueHandle slotQueue;
+xQueueHandle impQueue  = NULL;
+xQueueHandle slotQueue = NULL;
 
 FATFS fs;         /* Work area (file system object) for logical drive */
 FIL fsrc;         /* file objects */   
@@ -105,11 +105,8 @@ int main(void)
     scan_files(path);
     SD_TotalSize();
     
-    impQueue  = xQueueCreate(10, sizeof(EnergyLogger *));
-    slotQueue = xQueueCreate( 2, sizeof(void *));
-    
     xTaskCreate(vLoggerTask, (signed char * ) NULL, LOGGER_TASK_STACK_SIZE, NULL, LOGGER_TASK_PRIORITY, NULL);
-    xTaskCreate(vLCDTask,    (signed char * ) NULL, LCD_TASK_STACK_SIZE,    NULL, LCD_TASK_PRIORITY,    NULL);
+    //xTaskCreate(vLCDTask,    (signed char * ) NULL, LCD_TASK_STACK_SIZE,    NULL, LCD_TASK_PRIORITY,    NULL);
     /* Start the scheduler. */
     vTaskStartScheduler();
 
@@ -122,6 +119,10 @@ extern EnergyLogger houseLogger;
 void vLoggerTask(void * pvArg)
 {    
     EnergyLogger *logger;
+    int seconds;
+    
+    impQueue  = xQueueCreate(10, sizeof(EnergyLogger *));
+    slotQueue = xQueueCreate(10, sizeof(int));
     
     while (1)
     {
@@ -142,11 +143,17 @@ void vLoggerTask(void * pvArg)
             }
         }
         
-        if (xQueueReceive(slotQueue, NULL, 10))
+        if (xQueueReceive(slotQueue, &seconds, 10))
         {
-            newBin(&solarLogger);
-            newBin(&houseLogger);
-            plotLastBins();
+            UG_PutString(MAX_CONSOLE_X, 0, Time_As_String());
+            if (0 == seconds)
+            {
+                solarLogger.currentImps = rand() % MAX_DISP_IMPS;
+                houseLogger.currentImps = rand() % MAX_DISP_IMPS;
+                newBin(&solarLogger);
+                newBin(&houseLogger);
+                plotLastBins();
+            }
         }
     }
 }
@@ -490,6 +497,8 @@ void SDIO_IRQHandler(void)
   SD_ProcessIRQSrc();
 }
 
+static int dummy;
+
 //#define FIVE_MINUTES (60 * 5)
 #define FIVE_MINUTES 3
 void RTC_IRQHandler(void)
@@ -498,11 +507,10 @@ void RTC_IRQHandler(void)
     ++seconds;
     if (FIVE_MINUTES == seconds)
     {
-        xQueueSendFromISR(slotQueue, NULL, NULL);
         seconds = 0;
     }
+    if (slotQueue) { xQueueSendFromISR(slotQueue, &seconds, &dummy); }
     
-    UG_PutString(MAX_CONSOLE_X, 0, Time_As_String());
     RTC_ClearITPendingBit(RTC_IT_SEC);
 }
 
@@ -510,7 +518,7 @@ void EXTI0_IRQHandler(void)
 {
     if (EXTI_GetITStatus(EXTI_Line0) != RESET)
     {
-        xQueueSendFromISR(impQueue, &solarLogger, NULL);
+        if (impQueue) { xQueueSendFromISR(impQueue, &solarLogger, &dummy); }
         EXTI_ClearITPendingBit(EXTI_Line0);
     }
 }
@@ -519,7 +527,7 @@ void EXTI1_IRQHandler(void)
 {
     if (EXTI_GetITStatus(EXTI_Line1) != RESET)
     {
-        xQueueSendFromISR(impQueue, &houseLogger, NULL);
+        if (impQueue) { xQueueSendFromISR(impQueue, &houseLogger, &dummy); }
         EXTI_ClearITPendingBit(EXTI_Line1);
     }
 }
