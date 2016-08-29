@@ -81,28 +81,34 @@ void vLoggerTask(void * pvArg)
     {
         if (xQueueReceive(impQueue, &logger, 10))
         {
+            configASSERT(NULL != logger);
             addImp(logger);
+            char buf[10];
+            sprintf(buf, "%08d", logger->currentImps);
             if (&solarLogger == logger)
             {
                 GPIO_SetBits(GPIOB, GPIO_Pin_0);
-                vTaskDelay(100);                
+                vTaskDelay(10);                
+                UG_SetForecolor(SOLAR_COLOR);
+                UG_PutString(MAX_CONSOLE_X, 9, buf);
                 GPIO_ResetBits(GPIOB, GPIO_Pin_0);
             }
             else if (&houseLogger == logger)
             {
                 GPIO_SetBits(GPIOB, GPIO_Pin_1);
-                vTaskDelay(100);                
-                GPIO_SetBits(GPIOB, GPIO_Pin_1);
+                vTaskDelay(10);     
+                UG_SetForecolor(HOUSE_COLOR);
+                UG_PutString(MAX_CONSOLE_X, 18, buf);
+                GPIO_ResetBits(GPIOB, GPIO_Pin_1);
             }
         }
         
         if (xQueueReceive(slotQueue, &seconds, 10))
         {
+            UG_SetForecolor(White);
             UG_PutString(MAX_CONSOLE_X, 0, Time_As_String());
             if (0 == seconds)
             {
-                solarLogger.currentImps = rand() % MAX_DISP_IMPS;
-                houseLogger.currentImps = rand() % MAX_DISP_IMPS;
                 newBin(&solarLogger);
                 newBin(&houseLogger);
                 plotLastBins();
@@ -178,7 +184,7 @@ static void putf_gui(void *dummy, char ch)
     UG_ConsolePutString(buf);
 }
 
-static int dummy;
+static long int dummy;
 
 //#define FIVE_MINUTES (60 * 5)
 #define FIVE_MINUTES 3
@@ -196,19 +202,22 @@ void RTC_IRQHandler(void)
 }
 
 void EXTI0_IRQHandler(void)
-{
+{    
     if (EXTI_GetITStatus(EXTI_Line0) != RESET)
     {
-        if (impQueue) { xQueueSendFromISR(impQueue, &solarLogger, &dummy); }
+        EnergyLogger *solarLoggerPtr = &solarLogger;
+        if (impQueue) { xQueueSendFromISR(impQueue, &solarLoggerPtr, &dummy); }
         EXTI_ClearITPendingBit(EXTI_Line0);
     }
 }
 
 void EXTI1_IRQHandler(void)
 {
+
     if (EXTI_GetITStatus(EXTI_Line1) != RESET)
     {
-        if (impQueue) { xQueueSendFromISR(impQueue, &houseLogger, &dummy); }
+        EnergyLogger *houseLoggerPtr = &houseLogger;
+        if (impQueue) { xQueueSendFromISR(impQueue, &houseLoggerPtr, &dummy); }
         EXTI_ClearITPendingBit(EXTI_Line1);
     }
 }

@@ -12,9 +12,6 @@
 
 UG_GUI gui;
 
-#define SOLAR_COLOR C_YELLOW
-#define HOUSE_COLOR C_BLUE
-
 extern EnergyLogger solarLogger;
 extern EnergyLogger houseLogger;
 

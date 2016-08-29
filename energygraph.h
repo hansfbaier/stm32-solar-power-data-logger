@@ -8,6 +8,8 @@
 #ifndef ENERGYGRAPH_H_
 #define ENERGYGRAPH_H_
 
+#define SOLAR_COLOR C_YELLOW
+#define HOUSE_COLOR C_BLUE
 
 #define BOTTOM MAX_Y
 #define MAX_BIN_Y MAX_Y/8
