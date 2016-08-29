@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include "stm32f10x.h"
 #include "FreeRTOS.h"
+#include "queue.h"
 #include "task.h"
 #include "GLCD.h"
 #include "ugui.h"
@@ -35,11 +36,11 @@
 #include "ff.h"
 
 /* Private define ------------------------------------------------------------*/
-#define LED_TASK_STACK_SIZE			( configMINIMAL_STACK_SIZE )
+#define LOGGER_TASK_STACK_SIZE		( configMINIMAL_STACK_SIZE )
 #define LCD_TASK_STACK_SIZE			( configMINIMAL_STACK_SIZE )
 
-#define LED_TASK_PRIORITY			( tskIDLE_PRIORITY + 1 )
-#define LCD_TASK_PRIORITY			( tskIDLE_PRIORITY + 3 )
+#define LOGGER_TASK_PRIORITY		( tskIDLE_PRIORITY + 2 )
+#define LCD_TASK_PRIORITY			( tskIDLE_PRIORITY + 1 )
 
 /* Private function prototypes -----------------------------------------------*/
 static void prvSetupHardware(void);
@@ -49,13 +50,15 @@ void GPIO_Configuration(void);
 void USART_Configuration(void);
 void RTC_Init(void);
 void vLCDTask(void * pvArg);
-void vLEDTask(void * pvArg);
+void vLoggerTask(void * pvArg);
 void putchar(char ch);
 static void putf_serial(void * dummy, char ch);
 static void putf_gui(void * dummy, char ch);
 FRESULT scan_files (char* path);
 int SD_TotalSize(void);
 
+xQueueHandle impQueue;
+xQueueHandle slotQueue;
 
 FATFS fs;         /* Work area (file system object) for logical drive */
 FIL fsrc;         /* file objects */   
@@ -68,9 +71,7 @@ uint8_t textFileBuffer[] = "Thank you for using HY-MiniSTM32V Development Board\
 int main(void)
 {
     prvSetupHardware();
-    
-    //f_mkfs(0, 1, 0);
-    
+        
     if( SD_Detect() == SD_PRESENT )
     {
       printf("-- SD card detected\r\n");
@@ -104,29 +105,49 @@ int main(void)
     scan_files(path);
     SD_TotalSize();
     
-    xTaskCreate(vLEDTask, (signed char * ) NULL, LED_TASK_STACK_SIZE, NULL,
-            LED_TASK_PRIORITY, NULL);
-    xTaskCreate(vLCDTask, (signed char * ) NULL, LCD_TASK_STACK_SIZE, NULL,
-            LCD_TASK_PRIORITY, NULL);
+    impQueue  = xQueueCreate(10, sizeof(EnergyLogger *));
+    slotQueue = xQueueCreate( 2, sizeof(void *));
+    
+    xTaskCreate(vLoggerTask, (signed char * ) NULL, LOGGER_TASK_STACK_SIZE, NULL, LOGGER_TASK_PRIORITY, NULL);
+    xTaskCreate(vLCDTask,    (signed char * ) NULL, LCD_TASK_STACK_SIZE,    NULL, LCD_TASK_PRIORITY,    NULL);
     /* Start the scheduler. */
     vTaskStartScheduler();
 
     return 0;
 }
 
-void vLEDTask(void * pvArg)
+extern EnergyLogger solarLogger;
+extern EnergyLogger houseLogger;
+
+void vLoggerTask(void * pvArg)
 {    
+    EnergyLogger *logger;
+    
     while (1)
     {
-        //printf("%s\r\n", Time_As_String());
-        /* LED1-ON */
-        GPIO_SetBits(GPIOB, GPIO_Pin_0);
-        vTaskDelay(1000);
-
-        //printf("%s\r\n", Time_As_String());
-        /* LED1-OFF */
-        GPIO_ResetBits(GPIOB, GPIO_Pin_0);
-        vTaskDelay(1000);
+        if (xQueueReceive(impQueue, &logger, 10))
+        {
+            addImp(logger);
+            if (&solarLogger == logger)
+            {
+                GPIO_SetBits(GPIOB, GPIO_Pin_0);
+                vTaskDelay(100);                
+                GPIO_ResetBits(GPIOB, GPIO_Pin_0);
+            }
+            else if (&houseLogger == logger)
+            {
+                GPIO_SetBits(GPIOB, GPIO_Pin_1);
+                vTaskDelay(100);                
+                GPIO_SetBits(GPIOB, GPIO_Pin_1);
+            }
+        }
+        
+        if (xQueueReceive(slotQueue, NULL, 10))
+        {
+            newBin(&solarLogger);
+            newBin(&houseLogger);
+            plotLastBins();
+        }
     }
 }
 
@@ -137,35 +158,12 @@ void UserPixelSetFunction(UG_S16 x, UG_S16 y, UG_COLOR c)
 }
 
 extern UG_GUI gui;
-extern EnergyLogger solarLogger;
-extern EnergyLogger houseLogger;
 
 void vLCDTask(void * pvArg)
-{
-    LCD_Initialization();
-    LCD_Clear(Black);
-    UG_Init (&gui, &UserPixelSetFunction, MAX_X, MAX_Y);
-    UG_SelectGUI(&gui);
-    UG_SetForecolor(White);
-    UG_SetBackcolor(Black);
-    
-    UG_FontSelect(&FONT_6X8);
-
-    vTaskDelay(1000);
-    
-    UG_ConsoleSetArea(0, 0, MAX_X, MAX_BIN_Y);
-    UG_ConsoleSetForecolor(C_GREEN);
-    UG_ConsoleSetBackcolor(C_BLACK);
-    
+{        
     while (1)
     {
-        solarLogger.currentImps = rand() % MAX_DISP_IMPS;
-        houseLogger.currentImps = rand() % MAX_DISP_IMPS;
-        newBin(&solarLogger);
-        newBin(&houseLogger);
-        plotLastBins();
-
-        vTaskDelay(1000);
+        vTaskDelay(10000);
     }
 }
 
@@ -179,6 +177,19 @@ static void prvSetupHardware(void)
     USART_Configuration();
     init_printf(NULL, putf_serial);
     RTC_Init();
+    
+    LCD_Initialization();
+    LCD_Clear(Black);
+    UG_Init (&gui, &UserPixelSetFunction, MAX_X, MAX_Y);
+    UG_SelectGUI(&gui);
+    UG_SetForecolor(White);
+    UG_SetBackcolor(Black);
+    
+    UG_FontSelect(&FONT_6X8);
+    
+    UG_ConsoleSetArea(0, 0, MAX_CONSOLE_X, MAX_BIN_Y);
+    UG_ConsoleSetForecolor(C_GREEN);
+    UG_ConsoleSetBackcolor(C_BLACK);
     //init_printf(NULL, putf_gui);
 }
 
@@ -487,20 +498,19 @@ void RTC_IRQHandler(void)
     ++seconds;
     if (FIVE_MINUTES == seconds)
     {
-        newBin(&solarLogger);
-        newBin(&houseLogger);
+        xQueueSendFromISR(slotQueue, NULL, NULL);
         seconds = 0;
     }
     
+    UG_PutString(MAX_CONSOLE_X, 0, Time_As_String());
     RTC_ClearITPendingBit(RTC_IT_SEC);
-    UG_PutString(MAX_X - 56, 0, Time_As_String());
 }
 
 void EXTI0_IRQHandler(void)
 {
     if (EXTI_GetITStatus(EXTI_Line0) != RESET)
     {
-        addImp(&solarLogger);
+        xQueueSendFromISR(impQueue, &solarLogger, NULL);
         EXTI_ClearITPendingBit(EXTI_Line0);
     }
 }
@@ -509,7 +519,7 @@ void EXTI1_IRQHandler(void)
 {
     if (EXTI_GetITStatus(EXTI_Line1) != RESET)
     {
-        addImp(&houseLogger);
+        xQueueSendFromISR(impQueue, &houseLogger, NULL);
         EXTI_ClearITPendingBit(EXTI_Line1);
     }
 }
