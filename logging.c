@@ -9,6 +9,7 @@
 #include "sdio_sd.h"
 #include "ff.h"
 #include "printf.h"
+#include "ugui.h"
 
 FRESULT scan_files (char* path);
 int SD_TotalSize(void);
@@ -38,18 +39,18 @@ void Init_Logging(void)
 
     f_mount(0, &fs);
 
-    res = f_open(&fsrc, "0:/WattLog.TXT", FA_CREATE_NEW | FA_WRITE);
+    res = f_open(&fsrc, "0:/WattLog.csv", FA_CREATE_NEW | FA_WRITE);
 
     if (res == FR_OK)
     {
-        //res = f_write(&fsrc, textFileBuffer, sizeof(textFileBuffer), &br);     
-        printf("WattLog.TXT created\r\n");
-
-        f_close(&fsrc);
+        char header[] = "Time,Solar Imps,House Imps\r\n";
+        res = f_write(&fsrc, header, sizeof(header), &br);     
+        printf("WattLog.csv created\r\n");
     }
     else if (res == FR_EXIST)
     {
-        printf("WattLog.TXT exists\r\n");
+        printf("WattLog.csv exists\r\n");
+        res = f_open(&fsrc, "0:/WattLog.csv", FA_OPEN_EXISTING | FA_WRITE);
     }
 
     scan_files(path);
@@ -62,7 +63,7 @@ void addImp(EnergyLogger *logger)
 }
 
 void newBin(EnergyLogger *logger)
-{
+{    
     logger->bins[logger->currentBin] = logger->currentImps;
     logger->currentImps = 0;
     logger->currentBin = (logger->currentBin + 1) % NUM_BINS;
@@ -81,6 +82,27 @@ int lastBinNo(EnergyLogger *logger)
 int getLastBin(EnergyLogger *logger)
 {
     return getBin(logger, lastBinNo(logger));
+}
+
+void Write_Log_Entry(void)
+{
+    char buf[128];
+    sprintf(buf, "%s,%4d,%4d\n", Time_As_String(), getLastBin(&solarLogger), getLastBin(&houseLogger));
+    res = f_write(&fsrc, buf, strlen(buf), &br);
+    if (FR_OK != res)
+    {
+        UG_ConsoleSetForecolor(C_RED);
+        sprintf(buf, "error '%d' writing log entry\r\n", res);
+        UG_ConsolePutString(buf);
+    }
+    res = f_sync(&fsrc);
+    if (FR_OK != res)
+    {
+        UG_ConsoleSetForecolor(C_RED);
+        sprintf(buf, "error '%d' syncing log file\r\n", res);
+        UG_ConsolePutString(buf);
+    }
+    UG_ConsoleSetForecolor(C_GREEN);
 }
 
 FRESULT scan_files (char* path)

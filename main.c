@@ -69,6 +69,15 @@ int main(void)
 extern EnergyLogger solarLogger;
 extern EnergyLogger houseLogger;
 
+void printZeroedCounters(char *buf)
+{
+    sprintf(buf, "%08d", 0);
+    UG_SetForecolor(SOLAR_COLOR);
+    UG_PutString(MAX_CONSOLE_X, 9, buf);
+    UG_SetForecolor(HOUSE_COLOR);
+    UG_PutString(MAX_CONSOLE_X, 18, buf);
+}
+
 void vLoggerTask(void * pvArg)
 {    
     EnergyLogger *logger;
@@ -79,12 +88,14 @@ void vLoggerTask(void * pvArg)
     
     while (1)
     {
+        char buf[10];
+
         if (xQueueReceive(impQueue, &logger, 10))
         {
             configASSERT(NULL != logger);
             addImp(logger);
-            char buf[10];
             sprintf(buf, "%08d", logger->currentImps);
+            
             if (&solarLogger == logger)
             {
                 GPIO_SetBits(GPIOB, GPIO_Pin_0);
@@ -105,13 +116,16 @@ void vLoggerTask(void * pvArg)
         
         if (xQueueReceive(slotQueue, &seconds, 10))
         {
-            UG_SetForecolor(White);
+            printZeroedCounters(buf);
+
+            UG_SetForecolor(C_WHITE);
             UG_PutString(MAX_CONSOLE_X, 0, Time_As_String());
             if (0 == seconds)
             {
                 newBin(&solarLogger);
                 newBin(&houseLogger);
                 plotLastBins();
+                Write_Log_Entry();
             }
         }
     }
@@ -156,7 +170,7 @@ static void prvSetupHardware(void)
     UG_ConsoleSetArea(0, 0, MAX_CONSOLE_X, MAX_BIN_Y);
     UG_ConsoleSetForecolor(C_GREEN);
     UG_ConsoleSetBackcolor(C_BLACK);
-    //init_printf(NULL, putf_gui);
+    init_printf(NULL, putf_gui);
 }
 
 

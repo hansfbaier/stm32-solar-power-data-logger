@@ -20,6 +20,8 @@ typedef struct
 } EnergyLogger;
 
 void Init_Logging(void);
+void Write_Log_Entry(void);
+
 void addImp(EnergyLogger *logger);
 void newBin(EnergyLogger *logger);
 int  getBin(EnergyLogger *logger, int binNo);
