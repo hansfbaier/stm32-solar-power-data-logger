@@ -24,6 +24,15 @@ static FIL fsrc;         /* file objects */
 static FRESULT res;
 static UINT br;
 
+void PrintFileError(FRESULT res, char message[])
+{
+    char buf[48];
+    UG_ConsoleSetForecolor(C_RED);
+    sprintf(buf, "error '%d' %s\r\n", res, message);
+    UG_ConsolePutString(buf);
+    UG_ConsoleSetForecolor(C_GREEN);
+}
+
 void Init_Logging(void)
 {
     if (SD_Detect() == SD_PRESENT)
@@ -44,13 +53,31 @@ void Init_Logging(void)
     if (res == FR_OK)
     {
         char header[] = "Day,Time,Solar Imps,House Imps\r\n";
-        res = f_write(&fsrc, header, sizeof(header), &br);     
-        printf("WattLog.csv created\r\n");
+        res = f_write(&fsrc, header, sizeof(header), &br);
+        if (FR_OK != res)
+        {
+            PrintFileError(res, "creating log file");
+        }
+        else
+        {
+            printf("WattLog.csv created\r\n");
+        }
     }
     else if (res == FR_EXIST)
     {
         printf("WattLog.csv exists\r\n");
         res = f_open(&fsrc, "0:/WattLog.csv", FA_OPEN_EXISTING | FA_WRITE);
+        if (FR_OK != res)
+        {
+            PrintFileError(res, "opening log file");
+        }
+        
+        // go to end of file
+        res = f_lseek(&fsrc, fsrc.fsize);
+        if (FR_OK != res)
+        {
+            PrintFileError(res, "seeking log file");
+        }
     }
 
     scan_files(path);
@@ -88,20 +115,16 @@ void Write_Log_Entry(void)
 {
     char buf[128];
     int day = (int)(RTC_GetCounter() / (24 * 60 * 60));
-    sprintf(buf, "%d,%s,%4d,%4d\n", day, getLastBin(&solarLogger), getLastBin(&houseLogger));
+    sprintf(buf, "%d,%s,%4d,%4d\n", day, Time_As_String(), getLastBin(&solarLogger), getLastBin(&houseLogger));
     res = f_write(&fsrc, buf, strlen(buf), &br);
     if (FR_OK != res)
     {
-        UG_ConsoleSetForecolor(C_RED);
-        sprintf(buf, "error '%d' writing log entry\r\n", res);
-        UG_ConsolePutString(buf);
+        PrintFileError(res, "writing log entry");
     }
     res = f_sync(&fsrc);
     if (FR_OK != res)
     {
-        UG_ConsoleSetForecolor(C_RED);
-        sprintf(buf, "error '%d' syncing log file\r\n", res);
-        UG_ConsolePutString(buf);
+        PrintFileError(res, "syncing log file");
     }
     UG_ConsoleSetForecolor(C_GREEN);
 }
@@ -145,10 +168,9 @@ int SD_TotalSize(void)
     res = f_getfree("0:", &fre_clust, &fs); 
     if ( res==FR_OK ) 
     {
-      /* Print free space in unit of MB (assuming 512 bytes/sector) */
-      printf("\r\n%d MB total drive space.\r\n"
-           "%d MB available.\r\n",
-           ( (fs->n_fatent - 2) * fs->csize ) / 2 /1024 , (fre_clust * fs->csize) / 2 /1024 );
+      printf("%d MB of %d MB free.\r\n",
+             (fre_clust * fs->csize) / 2 / 1024,
+             ((fs->n_fatent - 2) * fs->csize ) / 2 / 1024);
         
       return ENABLE;
     }
