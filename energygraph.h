@@ -13,11 +13,16 @@
 
 #define BOTTOM MAX_Y
 #define MAX_BIN_Y MAX_Y/8
-#define MAX_CONSOLE_X (MAX_X - 56)
+#define MAX_CONSOLE_X (MAX_X - 112)
+#define SOLAR_X       (MAX_CONSOLE_X)
+#define HOUSE_X       (MAX_CONSOLE_X + 56)
+#define IMPS_Y        (9)
+#define WATTS_Y       (18)
 #define Y_RANGE (MAX_Y - MAX_BIN_Y)
 
 #define MAX_DISP_IMPS 1600
 
 void plotLastBins();
+void printZeroedCounters();
 
 #endif /* ENERGYGRAPH_H_ */

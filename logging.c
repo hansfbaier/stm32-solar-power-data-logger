@@ -43,7 +43,7 @@ void Init_Logging(void)
 
     if (res == FR_OK)
     {
-        char header[] = "Time,Solar Imps,House Imps\r\n";
+        char header[] = "Day,Time,Solar Imps,House Imps\r\n";
         res = f_write(&fsrc, header, sizeof(header), &br);     
         printf("WattLog.csv created\r\n");
     }
@@ -87,7 +87,8 @@ int getLastBin(EnergyLogger *logger)
 void Write_Log_Entry(void)
 {
     char buf[128];
-    sprintf(buf, "%s,%4d,%4d\n", Time_As_String(), getLastBin(&solarLogger), getLastBin(&houseLogger));
+    int day = (int)(RTC_GetCounter() / (24 * 60 * 60));
+    sprintf(buf, "%d,%s,%4d,%4d\n", day, getLastBin(&solarLogger), getLastBin(&houseLogger));
     res = f_write(&fsrc, buf, strlen(buf), &br);
     if (FR_OK != res)
     {

@@ -18,6 +18,15 @@ extern EnergyLogger houseLogger;
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
+void printZeroedCounters()
+{
+    char blank[] = "0000";
+    UG_SetForecolor(SOLAR_COLOR);
+    UG_PutString(SOLAR_X, IMPS_Y, blank);
+    UG_SetForecolor(HOUSE_COLOR);
+    UG_PutString(HOUSE_X, IMPS_Y, blank);
+}
+
 static void plotLastBin(EnergyLogger *logger)
 {
     int binX = lastBinNo(logger);

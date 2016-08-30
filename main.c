@@ -69,15 +69,6 @@ int main(void)
 extern EnergyLogger solarLogger;
 extern EnergyLogger houseLogger;
 
-void printZeroedCounters(char *buf)
-{
-    sprintf(buf, "%08d", 0);
-    UG_SetForecolor(SOLAR_COLOR);
-    UG_PutString(MAX_CONSOLE_X, 9, buf);
-    UG_SetForecolor(HOUSE_COLOR);
-    UG_PutString(MAX_CONSOLE_X, 18, buf);
-}
-
 void vLoggerTask(void * pvArg)
 {    
     EnergyLogger *logger;
@@ -88,35 +79,42 @@ void vLoggerTask(void * pvArg)
     
     while (1)
     {
-        char buf[10];
-
         if (xQueueReceive(impQueue, &logger, 10))
         {
             configASSERT(NULL != logger);
             addImp(logger);
-            sprintf(buf, "%08d", logger->currentImps);
-            
+
+            char imps[10];
+            char watts[10];
+            sprintf(imps, "%04d", logger->currentImps);
+            int wattsUsed = 0;
+            sprintf(watts, "%4dW", wattsUsed);
+
             if (&solarLogger == logger)
             {
                 GPIO_SetBits(GPIOB, GPIO_Pin_0);
                 vTaskDelay(10);                
-                UG_SetForecolor(SOLAR_COLOR);
-                UG_PutString(MAX_CONSOLE_X, 9, buf);
                 GPIO_ResetBits(GPIOB, GPIO_Pin_0);
+                
+                UG_SetForecolor(SOLAR_COLOR);
+                UG_PutString(SOLAR_X, IMPS_Y, imps);
+                UG_PutString(SOLAR_X, WATTS_Y, watts);
             }
             else if (&houseLogger == logger)
             {
                 GPIO_SetBits(GPIOB, GPIO_Pin_1);
                 vTaskDelay(10);     
-                UG_SetForecolor(HOUSE_COLOR);
-                UG_PutString(MAX_CONSOLE_X, 18, buf);
                 GPIO_ResetBits(GPIOB, GPIO_Pin_1);
+                
+                UG_SetForecolor(HOUSE_COLOR);
+                UG_PutString(HOUSE_X, IMPS_Y, imps);
+                UG_PutString(HOUSE_X, WATTS_Y, watts);
             }
         }
-        
+
         if (xQueueReceive(slotQueue, &seconds, 10))
         {
-            printZeroedCounters(buf);
+            printZeroedCounters();
 
             UG_SetForecolor(C_WHITE);
             UG_PutString(MAX_CONSOLE_X, 0, Time_As_String());
