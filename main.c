@@ -115,9 +115,13 @@ void vLoggerTask(void * pvArg)
         if (xQueueReceive(slotQueue, &seconds, 10))
         {
             printZeroedCounters();
-
+            
             UG_SetForecolor(C_WHITE);
-            UG_PutString(MAX_CONSOLE_X, 0, Time_As_String());
+            char buf[6];
+            sprintf(buf, "%5d", TIM_GetCounter(TIM2));
+            UG_PutString(MAX_CONSOLE_X, 0, buf);
+
+            UG_PutString(MAX_CONSOLE_X + 56, 0, Time_As_String());
             if (0 == seconds)
             {
                 newBin(&solarLogger);
@@ -155,6 +159,7 @@ static void prvSetupHardware(void)
     USART_Configuration();
     init_printf(NULL, putf_serial);
     RTC_Init();
+    TIM_Configuration();
     
     LCD_Initialization();
     LCD_Clear(Black);
@@ -247,6 +252,14 @@ void __attribute((__naked__)) HardFault_Handler( void )
         " bx r2                                                     \n"
         " handler2_address_const: .word prvGetRegistersFromStack    \n"
     );
+}
+
+void TIM2_IRQHandler(void)
+{
+    if ( TIM_GetITStatus(TIM2 , TIM_IT_Update) != RESET ) 
+    {
+       TIM_ClearITPendingBit(TIM2 , TIM_FLAG_Update);
+    }   
 }
 
 void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )

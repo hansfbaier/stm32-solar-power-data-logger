@@ -80,7 +80,7 @@ void Init_Logging(void)
         }
     }
 
-    scan_files(path);
+    //scan_files(path);
     SD_TotalSize();
 }
 
