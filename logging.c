@@ -86,14 +86,12 @@ void Init_Logging(void)
 
 void addImp(EnergyLogger *logger)
 {
-    ++logger->currentImps;
+    ++logger->bins[logger->currentBinNo];
 }
 
 void newBin(EnergyLogger *logger)
 {    
-    logger->bins[logger->currentBin] = logger->currentImps;
-    logger->currentImps = 0;
-    logger->currentBin = (logger->currentBin + 1) % NUM_BINS;
+    logger->currentBinNo = (logger->currentBinNo + 1) % NUM_BINS;
 }
 
 int getBin(EnergyLogger *logger, int binNo)
@@ -101,14 +99,19 @@ int getBin(EnergyLogger *logger, int binNo)
     return logger->bins[binNo];
 }
 
-int lastBinNo(EnergyLogger *logger)
+int  getCurrentBin(EnergyLogger *logger)
 {
-    return logger->currentBin - 1;
+    return getBin(logger, logger->currentBinNo);
+}
+
+int getLastBinNo(EnergyLogger *logger)
+{
+    return logger->currentBinNo - 1;
 }
 
 int getLastBin(EnergyLogger *logger)
 {
-    return getBin(logger, lastBinNo(logger));
+    return getBin(logger, getLastBinNo(logger));
 }
 
 void Write_Log_Entry(void)

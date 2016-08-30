@@ -27,11 +27,11 @@ void printZeroedCounters()
     UG_PutString(HOUSE_X, IMPS_Y, blank);
 }
 
-static void plotLastBin(EnergyLogger *logger)
+static void plotBinBar(EnergyLogger *logger, int binNo)
 {
-    int binX = lastBinNo(logger);
+    int binX = binNo;
     
-    int impsToDisplay = MIN(getLastBin(logger), MAX_DISP_IMPS);
+    int impsToDisplay = MIN(getBin(logger, binNo), MAX_DISP_IMPS);
     int yLength = (impsToDisplay * Y_RANGE) / MAX_DISP_IMPS;
     int binY = BOTTOM - yLength;
     
@@ -40,28 +40,28 @@ static void plotLastBin(EnergyLogger *logger)
     UG_DrawLine(binX, BOTTOM, binX, binY, gui.fore_color);
 }
 
-void plotLastBins()
+void plotBin(int binNo)
 {
-    int solarVal = getLastBin(&solarLogger);
-    int houseVal = getLastBin(&houseLogger);
+    int solarVal = getBin(&solarLogger, binNo);
+    int houseVal = getBin(&houseLogger, binNo);
     
     if (solarVal > houseVal)
     {
         UG_SetForecolor(SOLAR_COLOR);
-        plotLastBin(&solarLogger);
+        plotBinBar(&solarLogger, binNo);
         UG_SetForecolor(HOUSE_COLOR);
-        plotLastBin(&houseLogger);
+        plotBinBar(&houseLogger, binNo);
     }
     else if (solarVal < houseVal)
     {
         UG_SetForecolor(HOUSE_COLOR);
-        plotLastBin(&houseLogger);
+        plotBinBar(&houseLogger, binNo);
         UG_SetForecolor(SOLAR_COLOR);
-        plotLastBin(&solarLogger);
+        plotBinBar(&solarLogger, binNo);
     }
     else
     {
         UG_SetForecolor(C_WHITE);
-        plotLastBin(&solarLogger);
-    }
+        plotBinBar(&solarLogger, binNo);
+    }    
 }

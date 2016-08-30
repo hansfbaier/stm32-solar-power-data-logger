@@ -69,6 +69,8 @@ int main(void)
 extern EnergyLogger solarLogger;
 extern EnergyLogger houseLogger;
 
+#define ONE_DAY (24 * 60 * 60)
+
 void vLoggerTask(void * pvArg)
 {    
     EnergyLogger *logger;
@@ -79,6 +81,13 @@ void vLoggerTask(void * pvArg)
     
     while (1)
     {
+        uint32_t currentRtc = RTC_GetCounter();
+        if (0 == currentRtc % ONE_DAY)
+        {
+            // clear graph
+            UG_DrawFrame(0, MAX_BIN_Y, MAX_CONSOLE_X, MAX_Y, C_BLACK);
+        }
+        
         if (xQueueReceive(impQueue, &logger, 10))
         {
             configASSERT(NULL != logger);
@@ -86,11 +95,14 @@ void vLoggerTask(void * pvArg)
 
             char imps[10];
             char watts[10];
-            sprintf(imps, "%04d", logger->currentImps);
+            char watthours[10];
+            
+            sprintf(imps, "%04d", getCurrentBin(logger));
+            
             int millisSinceLastImp = (logger->impTimer - logger->lastImpTimer) / 2;
             int wattsUsed = 2250000 / millisSinceLastImp;
             sprintf(watts, "%4dW", wattsUsed);
-
+            
             if (&solarLogger == logger)
             {
                 GPIO_SetBits(GPIOB, GPIO_Pin_0);
@@ -111,6 +123,8 @@ void vLoggerTask(void * pvArg)
                 UG_PutString(HOUSE_X, IMPS_Y, imps);
                 UG_PutString(HOUSE_X, WATTS_Y, watts);
             }
+            
+            plotBin(solarLogger.currentBinNo);
         }
 
         if (xQueueReceive(slotQueue, &seconds, 10))
@@ -125,9 +139,12 @@ void vLoggerTask(void * pvArg)
             UG_PutString(MAX_CONSOLE_X + 56, 0, Time_As_String());
             if (0 == seconds)
             {
+                configASSERT(solarLogger.currentBinNo == houseLogger.currentBinNo);
                 newBin(&solarLogger);
                 newBin(&houseLogger);
-                plotLastBins();
+                configASSERT(solarLogger.currentBinNo == houseLogger.currentBinNo);
+                
+                plotBin(getLastBinNo(&solarLogger));
                 Write_Log_Entry();
             }
         }

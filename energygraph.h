@@ -22,7 +22,7 @@
 
 #define MAX_DISP_IMPS 1600
 
-void plotLastBins();
+void plotBin(int binNo);
 void printZeroedCounters();
 
 #endif /* ENERGYGRAPH_H_ */
