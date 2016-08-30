@@ -15,6 +15,7 @@
 typedef struct 
 {
     int bins[NUM_BINS];
+    int impsToday;
     int currentBinNo;
     int impTimer;
     int lastImpTimer;

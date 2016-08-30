@@ -92,16 +92,23 @@ void vLoggerTask(void * pvArg)
         {
             configASSERT(NULL != logger);
             addImp(logger);
-
+            
             char imps[10];
+            int impsThisBin = getCurrentBin(logger);
+            sprintf(imps, "%4d", impsThisBin);
+            
             char watts[10];
-            char watthours[10];
-            
-            sprintf(imps, "%04d", getCurrentBin(logger));
-            
             int millisSinceLastImp = (logger->impTimer - logger->lastImpTimer) / 2;
             int wattsUsed = 2250000 / millisSinceLastImp;
             sprintf(watts, "%4dW", wattsUsed);
+            
+            char watthours[10];
+            int wattHoursThisBin = (1000 * impsThisBin) / 1600;
+            sprintf(watthours, "%4dWh", wattHoursThisBin);
+            
+            char watthoursday[10];
+            int wattHoursToday = (1000 * logger->impsToday) / 1600;
+            sprintf(watthoursday, "%4dWh", wattHoursToday);            
             
             if (&solarLogger == logger)
             {
@@ -110,8 +117,10 @@ void vLoggerTask(void * pvArg)
                 GPIO_ResetBits(GPIOB, GPIO_Pin_0);
                 
                 UG_SetForecolor(SOLAR_COLOR);
-                UG_PutString(SOLAR_X, IMPS_Y, imps);
-                UG_PutString(SOLAR_X, WATTS_Y, watts);
+                UG_PutString(SOLAR_X, IMPS_Y,         imps);
+                UG_PutString(SOLAR_X, WATTS_Y,        watts);
+                UG_PutString(SOLAR_X, WATTHOURS_Y,    watthours);
+                UG_PutString(SOLAR_X, WATTHOURSDAY_Y, watthoursday);
             }
             else if (&houseLogger == logger)
             {
@@ -120,17 +129,17 @@ void vLoggerTask(void * pvArg)
                 GPIO_ResetBits(GPIOB, GPIO_Pin_1);
                 
                 UG_SetForecolor(HOUSE_COLOR);
-                UG_PutString(HOUSE_X, IMPS_Y, imps);
-                UG_PutString(HOUSE_X, WATTS_Y, watts);
+                UG_PutString(HOUSE_X, IMPS_Y,         imps);
+                UG_PutString(HOUSE_X, WATTS_Y,        watts);
+                UG_PutString(HOUSE_X, WATTHOURS_Y,    watthours);
+                UG_PutString(HOUSE_X, WATTHOURSDAY_Y, watthoursday);
             }
             
             plotBin(solarLogger.currentBinNo);
         }
 
         if (xQueueReceive(slotQueue, &seconds, 10))
-        {
-            printZeroedCounters();
-            
+        {            
             UG_SetForecolor(C_WHITE);
             char buf[6];
             sprintf(buf, "%5d", TIM_GetCounter(TIM2));
@@ -142,6 +151,7 @@ void vLoggerTask(void * pvArg)
                 configASSERT(solarLogger.currentBinNo == houseLogger.currentBinNo);
                 newBin(&solarLogger);
                 newBin(&houseLogger);
+                printZeroedCounters();
                 configASSERT(solarLogger.currentBinNo == houseLogger.currentBinNo);
                 
                 plotBin(getLastBinNo(&solarLogger));

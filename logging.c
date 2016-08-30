@@ -87,11 +87,16 @@ void Init_Logging(void)
 void addImp(EnergyLogger *logger)
 {
     ++logger->bins[logger->currentBinNo];
+    ++logger->impsToday;
 }
 
 void newBin(EnergyLogger *logger)
 {    
     logger->currentBinNo = (logger->currentBinNo + 1) % NUM_BINS;
+    if (0 == logger->currentBinNo)
+    {
+        logger->impsToday = 0;
+    }
 }
 
 int getBin(EnergyLogger *logger, int binNo)

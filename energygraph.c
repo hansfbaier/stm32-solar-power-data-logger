@@ -20,7 +20,7 @@ extern EnergyLogger houseLogger;
 
 void printZeroedCounters()
 {
-    char blank[] = "0000";
+    char blank[] = "   0";
     UG_SetForecolor(SOLAR_COLOR);
     UG_PutString(SOLAR_X, IMPS_Y, blank);
     UG_SetForecolor(HOUSE_COLOR);

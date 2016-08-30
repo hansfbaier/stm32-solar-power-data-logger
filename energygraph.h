@@ -16,8 +16,10 @@
 #define MAX_CONSOLE_X (MAX_X - 112)
 #define SOLAR_X       (MAX_CONSOLE_X)
 #define HOUSE_X       (MAX_CONSOLE_X + 56)
-#define IMPS_Y        (9)
-#define WATTS_Y       (18)
+#define IMPS_Y         (27)
+#define WATTS_Y        (36)
+#define WATTHOURS_Y    (18)
+#define WATTHOURSDAY_Y (9)
 #define Y_RANGE (MAX_Y - MAX_BIN_Y)
 
 #define MAX_DISP_IMPS 1600
