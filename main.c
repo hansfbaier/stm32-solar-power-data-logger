@@ -87,7 +87,8 @@ void vLoggerTask(void * pvArg)
             char imps[10];
             char watts[10];
             sprintf(imps, "%04d", logger->currentImps);
-            int wattsUsed = 0;
+            int millisSinceLastImp = (logger->impTimer - logger->lastImpTimer) / 2;
+            int wattsUsed = 2250000 / millisSinceLastImp;
             sprintf(watts, "%4dW", wattsUsed);
 
             if (&solarLogger == logger)
@@ -223,6 +224,8 @@ void EXTI0_IRQHandler(void)
     if (EXTI_GetITStatus(EXTI_Line0) != RESET)
     {
         EnergyLogger *solarLoggerPtr = &solarLogger;
+        solarLogger.lastImpTimer = solarLogger.impTimer;
+        solarLogger.impTimer = TIM_GetCounter(TIM2);
         if (impQueue) { xQueueSendFromISR(impQueue, &solarLoggerPtr, &dummy); }
         EXTI_ClearITPendingBit(EXTI_Line0);
     }
@@ -234,6 +237,8 @@ void EXTI1_IRQHandler(void)
     if (EXTI_GetITStatus(EXTI_Line1) != RESET)
     {
         EnergyLogger *houseLoggerPtr = &houseLogger;
+        houseLogger.lastImpTimer = houseLogger.impTimer;
+        houseLogger.impTimer = TIM_GetCounter(TIM2);
         if (impQueue) { xQueueSendFromISR(impQueue, &houseLoggerPtr, &dummy); }
         EXTI_ClearITPendingBit(EXTI_Line1);
     }

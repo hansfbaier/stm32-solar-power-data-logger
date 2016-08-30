@@ -17,6 +17,8 @@ typedef struct
     int bins[NUM_BINS];
     int currentBin;
     int currentImps;
+    int impTimer;
+    int lastImpTimer;
 } EnergyLogger;
 
 void Init_Logging(void);
