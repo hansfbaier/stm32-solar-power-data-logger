@@ -35,7 +35,7 @@
 #include "hardware-config.h"
 
 /* Private define ------------------------------------------------------------*/
-#define LOGGER_TASK_STACK_SIZE		( configMINIMAL_STACK_SIZE )
+#define LOGGER_TASK_STACK_SIZE		( 150 )
 #define LCD_TASK_STACK_SIZE			( configMINIMAL_STACK_SIZE )
 
 #define LOGGER_TASK_PRIORITY		( tskIDLE_PRIORITY + 2 )
