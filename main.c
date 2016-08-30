@@ -221,8 +221,7 @@ static void putf_gui(void *dummy, char ch)
 
 static long int dummy;
 
-//#define FIVE_MINUTES (60 * 5)
-#define FIVE_MINUTES 3
+#define FIVE_MINUTES (60 * 5)
 void RTC_IRQHandler(void)
 {
     static int seconds = 0;
