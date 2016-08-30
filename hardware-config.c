@@ -141,43 +141,44 @@ void RTC_Init(void)
 {
     if (BKP_ReadBackupRegister(BKP_DR1) != 0xA5A5)
     {
-      /* Backup data register value is not correct or not yet programmed (when
+        /* Backup data register value is not correct or not yet programmed (when
          the first time the program is executed) */
-    
-      printf("\r\n\n RTC not yet configured....");
-    
-      /* RTC Configuration */
-      RTC_Configuration();
-    
-      printf("\r\n RTC configured....");
-    
-      /* Adjust time by values entered by the user on the hyperterminal */
-      Time_Adjust();
-    
-      BKP_WriteBackupRegister(BKP_DR1, 0xA5A5);
+
+        printf("\r\n\n RTC not yet configured....");
+
+        /* RTC Configuration */
+        RTC_Configuration();
+
+        printf("\r\n RTC configured....");
+
+        /* Adjust time by values entered by the user on the hyperterminal */
+        Time_Adjust();
+
+        BKP_WriteBackupRegister(BKP_DR1, 0xA5A5);
     }
     else
     {
-      /* Check if the Power On Reset flag is set */
-      if (RCC_GetFlagStatus(RCC_FLAG_PORRST) != RESET)
-      {
-        printf("\r\n\n Power On Reset");
-      }
-      /* Check if the Pin Reset flag is set */
-      else if (RCC_GetFlagStatus(RCC_FLAG_PINRST) != RESET)
-      {
-        printf("\r\n\n External Reset");
-      }
-    
-      printf("\r\n No need to configure RTC");
-      /* Wait for RTC registers synchronization */
-      RTC_WaitForSynchro();
-    
-      /* Enable the RTC Second */
-      RTC_ITConfig(RTC_IT_SEC, ENABLE);
-      /* Wait until last write operation on RTC registers has finished */
-      RTC_WaitForLastTask();
+        /* Check if the Power On Reset flag is set */
+        if (RCC_GetFlagStatus(RCC_FLAG_PORRST) != RESET)
+        {
+            printf("\r\n\n Power On Reset");
+        }
+        /* Check if the Pin Reset flag is set */
+        else if (RCC_GetFlagStatus(RCC_FLAG_PINRST) != RESET)
+        {
+            printf("\r\n\n External Reset");
+        }
+
+        printf("\r\n No need to configure RTC");
     }
+
+    /* Wait for RTC registers synchronization */
+    RTC_WaitForSynchro();
+
+    /* Enable the RTC Second */
+    RTC_ITConfig(RTC_IT_SEC, ENABLE);
+    /* Wait until last write operation on RTC registers has finished */
+    RTC_WaitForLastTask();
 }
 
 void RTC_Configuration(void)
@@ -208,9 +209,6 @@ void RTC_Configuration(void)
 
   /* Wait until last write operation on RTC registers has finished */
   RTC_WaitForLastTask();
-
-  /* Enable the RTC Second */
-  //RTC_ITConfig(RTC_IT_SEC, ENABLE);
 
   /* Wait until last write operation on RTC registers has finished */
   RTC_WaitForLastTask();
