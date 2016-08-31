@@ -58,7 +58,7 @@ DEFINES = -D$(DEVICE_TYPE) -DHSE_VALUE=$(HSE_VALUE) $(USE_STDPERIPH_DRIVER)
 
 export DEFINES
 
-COMPILE_OPTS = $(WARNINGS) $(TARGET_OPTS) $(MESSAGES) $(INCLUDE_DIRS) $(DEFINES)
+COMPILE_OPTS = $(WARNINGS) $(TARGET_OPTS) $(MESSAGES) $(INCLUDE_DIRS) $(DEFINES) #-fstack-usage
 WARNINGS = -Wall -W -Wshadow -Wcast-qual -Wwrite-strings -Winline
 
 ifdef DEBUG
@@ -103,6 +103,8 @@ MAIN_OBJS = $(sort \
  $(patsubst %.c,%.o,$(wildcard FreeRTOS/*.c)) \
  $(patsubst %.c,%.o,$(wildcard lib/CMSIS_CM3/*.c)) \
  $(STARTUP_OBJ))
+
+MAIN_STACK_USAGES = $(patsubst %.o,%.su,$(MAIN_OBJS))
 
 # all
 
@@ -172,5 +174,6 @@ clean:
 	-rm -f $(MAIN_OBJS) $(MAIN_OUT) $(MAIN_MAP) $(MAIN_BIN)
 	-rm -f lib/CMSIS_CM3/startup/gcc/*.o
 	-rm -f jtag/flash.elf jtag/flash.bin
+	-rm -f $(MAIN_STACK_USAGES)
 	@cd lib/STM32F10x_StdPeriph_Driver && $(MAKE) clean
 	@cd lib/STM32_USB-FS-Device_Driver && $(MAKE) clean
