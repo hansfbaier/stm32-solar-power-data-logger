@@ -35,6 +35,11 @@ void PrintFileError(FRESULT res, char message[])
 
 void Init_Logging(void)
 {
+    uint32_t rtc = RTC_GetCounter();
+    int slot = (rtc % (24 * 60 * 60)) / (5 * 60);
+    solarLogger.currentBinNo = slot;
+    houseLogger.currentBinNo = slot;
+    
     if (SD_Detect() == SD_PRESENT)
     {
         printf("-- SD card detected\r\n");

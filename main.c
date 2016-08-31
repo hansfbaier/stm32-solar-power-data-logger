@@ -151,8 +151,9 @@ void vLoggerTask(void * pvArg)
                 configASSERT(solarLogger.currentBinNo == houseLogger.currentBinNo);
                 newBin(&solarLogger);
                 newBin(&houseLogger);
-                printZeroedCounters();
                 configASSERT(solarLogger.currentBinNo == houseLogger.currentBinNo);
+                printZeroedCounters();
+                SD_TotalSize();
                 
                 plotBin(getLastBinNo(&solarLogger));
                 Write_Log_Entry();
