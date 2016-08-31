@@ -11,7 +11,7 @@ Modified P Harrison May 2009
 *    PROVIDE" allows to easily override these values from an object file or the commmand line.
 */
 
-__Stack_Size = 1024 ;
+__Stack_Size = 0x500;
 PROVIDE ( _Stack_Size = __Stack_Size ) ;
 __Stack_Init = _estack  - __Stack_Size ;
 PROVIDE ( _Stack_Init = __Stack_Init ) ;
@@ -19,7 +19,7 @@ PROVIDE ( _Stack_Init = __Stack_Init ) ;
 /*
 *There will be a link error if there is not this amount of RAM free at the end.
 */
-_Minimum_Stack_Size = 0x100 ;
+_Minimum_Stack_Size = 0x500 ;
 
 
 MEMORY
@@ -128,6 +128,7 @@ SECTIONS
     {
         *(.init) /* we don't call init and fini anyway. GCC 5.x starting added them but then optimising them out */
         *(.fini)
+        *(.igot.plt)
         libc.a ( * )
         libm.a ( * )
         libgcc.a ( * )
