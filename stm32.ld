@@ -29,7 +29,7 @@ MEMORY
 }
 
 /* higher address of the user mode stack */
-_estack = 0x20005000;
+_estack = 0x20000500;
 
 SECTIONS
 {
@@ -72,6 +72,21 @@ SECTIONS
         _sidata = _etext; /* Uused by the startup in order to initialize the .data secion */
     } >FLASH
     
+    
+    /* 
+    * This is the user stack section 
+    * This is just to check that there is enough RAM left for the User mode stack
+    * It should generate an error if it's full.
+    */
+    ._usrstack :
+    {
+        . = ALIGN(4);
+        _susrstack = . ;
+        . = . + _Minimum_Stack_Size ;
+        . = ALIGN(4);
+        _eusrstack = . ;
+    } >RAM
+    
     /* 
     * This is the initialized data section. It is stored in RAM but the initial values
     * are held in flash and copied to RAM by the startup code
@@ -104,20 +119,6 @@ SECTIONS
     
     PROVIDE ( end = _ebss );
     PROVIDE ( _end = _ebss );
-    
-    /* 
-    * This is the user stack section 
-    * This is just to check that there is enough RAM left for the User mode stack
-    * It should generate an error if it's full.
-    */
-    ._usrstack :
-    {
-        . = ALIGN(4);
-        _susrstack = . ;
-        . = . + _Minimum_Stack_Size ;
-        . = ALIGN(4);
-        _eusrstack = . ;
-    } >RAM
     
     /* 
     * after that it's only debugging information. 
