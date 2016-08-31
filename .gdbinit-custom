@@ -111,7 +111,8 @@ end
 define reg
 printf "     r0:%08x r1:%08x  r2:%08x  r3:%08x ",  $r0, $r1, $r2, $r3
 #printf "     msp:%08x psp:%08x\n", $msp, $psp
-printf "                      \n"
+#printf "                      \n"
+printf "      sp:%08x             \n", $sp
 printf "     r4:%08x r5:%08x  r6:%08x  r7:%08x ",  $r4, $r5, $r6, $r7
 printf "      lr:%08x\n", $lr
 printf "     r8:%08x r9:%08x r10:%08x ",  $r8, $r9, $r10
