@@ -237,26 +237,27 @@ static long int dummy;
 #define FIVE_MINUTES (60 * 5)
 void RTC_IRQHandler(void)
 {
+    RTC_ClearITPendingBit(RTC_IT_SEC);
+    
     static int seconds = 0;
+    
     ++seconds;
     if (FIVE_MINUTES == seconds)
     {
         seconds = 0;
     }
-    if (slotQueue) { xQueueSendFromISR(slotQueue, &seconds, &dummy); }
-    
-    RTC_ClearITPendingBit(RTC_IT_SEC);
+    if (slotQueue) { xQueueSendFromISR(slotQueue, &seconds, &dummy); }   
 }
 
 void EXTI0_IRQHandler(void)
 {    
     if (EXTI_GetITStatus(EXTI_Line0) != RESET)
     {
+        EXTI_ClearITPendingBit(EXTI_Line0);
         EnergyLogger *solarLoggerPtr = &solarLogger;
         solarLogger.lastImpTimer = solarLogger.impTimer;
         solarLogger.impTimer = TIM_GetCounter(TIM2);
         if (impQueue) { xQueueSendFromISR(impQueue, &solarLoggerPtr, &dummy); }
-        EXTI_ClearITPendingBit(EXTI_Line0);
     }
 }
 
@@ -265,11 +266,11 @@ void EXTI1_IRQHandler(void)
 
     if (EXTI_GetITStatus(EXTI_Line1) != RESET)
     {
+        EXTI_ClearITPendingBit(EXTI_Line1);
         EnergyLogger *houseLoggerPtr = &houseLogger;
         houseLogger.lastImpTimer = houseLogger.impTimer;
         houseLogger.impTimer = TIM_GetCounter(TIM2);
         if (impQueue) { xQueueSendFromISR(impQueue, &houseLoggerPtr, &dummy); }
-        EXTI_ClearITPendingBit(EXTI_Line1);
     }
 }
 
