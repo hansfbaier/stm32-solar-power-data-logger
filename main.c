@@ -118,6 +118,7 @@ void vLoggerTask(void * pvArg)
                 
                 UG_SetForecolor(SOLAR_COLOR);
                 UG_PutString(SOLAR_X, IMPS_Y,         imps);
+                UG_PutString(SOLAR_X, WATTS_Y,        "        ");
                 UG_PutString(SOLAR_X, WATTS_Y,        watts);
                 UG_PutString(SOLAR_X, WATTHOURS_Y,    watthours);
                 UG_PutString(SOLAR_X, WATTHOURSDAY_Y, watthoursday);
@@ -130,6 +131,7 @@ void vLoggerTask(void * pvArg)
                 
                 UG_SetForecolor(HOUSE_COLOR);
                 UG_PutString(HOUSE_X, IMPS_Y,         imps);
+                UG_PutString(HOUSE_X, WATTS_Y,        "        ");
                 UG_PutString(HOUSE_X, WATTS_Y,        watts);
                 UG_PutString(HOUSE_X, WATTHOURS_Y,    watthours);
                 UG_PutString(HOUSE_X, WATTHOURSDAY_Y, watthoursday);
