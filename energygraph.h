@@ -12,10 +12,13 @@
 #define HOUSE_COLOR C_BLUE
 
 #define BOTTOM MAX_Y
-#define MAX_BIN_Y MAX_Y/8
 #define MAX_CONSOLE_X (MAX_X - 112)
 #define SOLAR_X       (MAX_CONSOLE_X)
 #define HOUSE_X       (MAX_CONSOLE_X + 56)
+
+#define MAX_BIN_Y MAX_Y/8
+#define CONSOLE_START_Y     (9)
+#define CONSOLE_END_Y       (MAX_BIN_Y)
 #define IMPS_Y         (27)
 #define WATTS_Y        (36)
 #define WATTHOURS_Y    (18)

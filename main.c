@@ -201,7 +201,7 @@ static void prvSetupHardware(void)
     
     UG_FontSelect(&FONT_6X8);
     
-    UG_ConsoleSetArea(0, 0, MAX_CONSOLE_X, MAX_BIN_Y);
+    UG_ConsoleSetArea(0, CONSOLE_START_Y, MAX_CONSOLE_X, CONSOLE_END_Y);
     UG_ConsoleSetForecolor(C_GREEN);
     UG_ConsoleSetBackcolor(C_BLACK);
     init_printf(NULL, putf_gui);

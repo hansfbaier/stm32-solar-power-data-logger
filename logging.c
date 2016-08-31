@@ -181,10 +181,15 @@ int SD_TotalSize(void)
     res = f_getfree("0:", &fre_clust, &fs); 
     if ( res==FR_OK ) 
     {
-      printf("%d MB of %d MB free.\r\n",
-             (fre_clust * fs->csize) / 2 / 1024,
-             ((fs->n_fatent - 2) * fs->csize ) / 2 / 1024);
+      char buf[32];
+      sprintf(buf,
+              "%d MB of %d MB free.\r\n",
+              (fre_clust * fs->csize) / 2 / 1024,
+              ((fs->n_fatent - 2) * fs->csize ) / 2 / 1024);
         
+      UG_SetForecolor(C_WHITE);
+      UG_PutString(0, 0, buf);
+      
       return ENABLE;
     }
     else 
