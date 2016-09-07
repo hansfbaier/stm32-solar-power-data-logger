@@ -69,8 +69,6 @@ int main(void)
 extern EnergyLogger solarLogger;
 extern EnergyLogger houseLogger;
 
-#define ONE_DAY (24 * 60 * 60)
-
 void vLoggerTask(void * pvArg)
 {    
     EnergyLogger *logger;
@@ -145,7 +143,7 @@ void vLoggerTask(void * pvArg)
             UG_SetForecolor(C_WHITE);
             char buf[6];
             sprintf(buf, "%5d", TIM_GetCounter(TIM2));
-            UG_PutString(MAX_CONSOLE_X, 0, buf);
+            UG_PutString(MAX_CONSOLE_X + 7, 0, buf);
 
             UG_PutString(MAX_CONSOLE_X + 56, 0, Time_As_String());
             if (0 == seconds)
@@ -159,6 +157,15 @@ void vLoggerTask(void * pvArg)
                 
                 plotBin(getLastBinNo(&solarLogger));
                 Write_Log_Entry();
+                
+                if (0 == solarLogger.currentBinNo)
+                {
+                    char buf[15];
+                    sprintf(buf, "Day %d", (int)(RTC_GetCounter() / ONE_DAY));
+                    UG_SetForecolor(C_WHITE);
+                    UG_PutString(MAX_X/2 - 2 * 9, 0, buf);
+                    UG_FillFrame(0, IMPS_Y, MAX_X, MAX_Y, C_BLACK);
+                }
             }
         }
     }
@@ -238,14 +245,9 @@ static long int dummy;
 void RTC_IRQHandler(void)
 {
     RTC_ClearITPendingBit(RTC_IT_SEC);
+    static int seconds;
     
-    static int seconds = 0;
-    
-    ++seconds;
-    if (FIVE_MINUTES == seconds)
-    {
-        seconds = 0;
-    }
+    seconds = RTC_GetCounter() % FIVE_MINUTES;
     if (slotQueue) { xQueueSendFromISR(slotQueue, &seconds, &dummy); }   
 }
 

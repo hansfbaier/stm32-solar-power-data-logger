@@ -7,6 +7,10 @@
 
 #ifndef RTC_H_
 #define RTC_H_
+#include <stdint.h>
+
+#define ONE_DAY (24 * 60 * 60)
+
 uint32_t Time_Regulate(void);
 void Time_Adjust(void);
 char *Time_As_String();

@@ -56,16 +56,8 @@ char *Time_As_String()
 {
   static char time_buf[9];
 
-  uint32_t TimeVar = RTC_GetCounter();
+  uint32_t TimeVar = RTC_GetCounter() % ONE_DAY;
   uint32_t THH = 0, TMM = 0, TSS = 0;
-  
-  /* Reset RTC Counter when Time is 23:59:59 */
-  if (RTC_GetCounter() == 0x0001517F)
-  {
-     RTC_SetCounter(0x0);
-     /* Wait until last write operation on RTC registers has finished */
-     RTC_WaitForLastTask();
-  }
   
   /* Compute  hours */
   THH = TimeVar / 3600;

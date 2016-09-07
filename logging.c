@@ -36,7 +36,7 @@ void PrintFileError(FRESULT res, char message[])
 void Init_Logging(void)
 {
     uint32_t rtc = RTC_GetCounter();
-    int slot = (rtc % (24 * 60 * 60)) / (5 * 60);
+    int slot = (rtc % ONE_DAY) / (5 * 60);
     solarLogger.currentBinNo = slot;
     houseLogger.currentBinNo = slot;
     
@@ -116,6 +116,10 @@ int  getCurrentBin(EnergyLogger *logger)
 
 int getLastBinNo(EnergyLogger *logger)
 {
+    if (0 == logger->currentBinNo)
+    {
+        return NUM_BINS - 1;
+    }
     return logger->currentBinNo - 1;
 }
 
@@ -127,7 +131,7 @@ int getLastBin(EnergyLogger *logger)
 void Write_Log_Entry(void)
 {
     char buf[128];
-    int day = (int)(RTC_GetCounter() / (24 * 60 * 60));
+    int day = (int)(RTC_GetCounter() / ONE_DAY);
     sprintf(buf, "%d,%s,%4d,%4d\n", day, Time_As_String(), getLastBin(&solarLogger), getLastBin(&houseLogger));
     res = f_write(&fsrc, buf, strlen(buf), &br);
     if (FR_OK != res)
@@ -183,7 +187,7 @@ int SD_TotalSize(void)
     {
       char buf[32];
       sprintf(buf,
-              "%d MB of %d MB free.\r\n",
+              "%d MB of %d MB.",
               (fre_clust * fs->csize) / 2 / 1024,
               ((fs->n_fatent - 2) * fs->csize ) / 2 / 1024);
         

@@ -7,10 +7,10 @@
 
 #ifndef LOGGING_H_
 #define LOGGING_H_
-
+#include "rtc.h"
 // 1 bin = 5 min
 // 1 day = 24 * 60 = 288 * 5
-#define NUM_BINS 288
+#define NUM_BINS (ONE_DAY / (5 * 60))
 
 typedef struct 
 {
