@@ -264,15 +264,19 @@ void EXTI0_IRQHandler(void)
 }
 
 void EXTI1_IRQHandler(void)
-{
-
+{    
     if (EXTI_GetITStatus(EXTI_Line1) != RESET)
     {
         EXTI_ClearITPendingBit(EXTI_Line1);
-        EnergyLogger *houseLoggerPtr = &houseLogger;
-        houseLogger.lastImpTimer = houseLogger.impTimer;
-        houseLogger.impTimer = TIM_GetCounter(TIM2);
-        if (impQueue) { xQueueSendFromISR(impQueue, &houseLoggerPtr, &dummy); }
+        int impTimer = TIM_GetCounter(TIM2);
+        // debounce broken house meter output
+        if (impTimer - houseLogger.impTimer > 200)
+        {
+            EnergyLogger *houseLoggerPtr = &houseLogger;
+            houseLogger.lastImpTimer = houseLogger.impTimer;
+            houseLogger.impTimer = impTimer;
+            if (impQueue) { xQueueSendFromISR(impQueue, &houseLoggerPtr, &dummy); }
+        }
     }
 }
 
