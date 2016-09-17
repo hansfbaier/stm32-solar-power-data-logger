@@ -93,10 +93,15 @@ void vLoggerTask(void * pvArg)
             int impsThisBin = getCurrentBin(logger);
             sprintf(imps, "%4d", impsThisBin);
             
+#ifdef DISPLAY_WATTS
             char watts[10];
+            if (logger->impTimer < logger->lastImpTimer) {
+                logger->impTimer += 64000;
+            }
             int millisSinceLastImp = (logger->impTimer - logger->lastImpTimer) / 2;
             int wattsUsed = 2250000 / millisSinceLastImp;
             sprintf(watts, "%4dW", wattsUsed);
+#endif
             
             char watthours[10];
             int wattHoursThisBin = (1000 * impsThisBin) / 1600;
@@ -115,7 +120,9 @@ void vLoggerTask(void * pvArg)
                 UG_SetForecolor(SOLAR_COLOR);
                 UG_PutString(SOLAR_X, IMPS_Y,         imps);
                 UG_PutString(SOLAR_X, WATTS_Y,        "        ");
+#ifdef DISPLAY_WATTS
                 UG_PutString(SOLAR_X, WATTS_Y,        watts);
+#endif
                 UG_PutString(SOLAR_X, WATTHOURS_Y,    watthours);
                 UG_PutString(SOLAR_X, WATTHOURSDAY_Y, watthoursday);
             }
@@ -128,7 +135,9 @@ void vLoggerTask(void * pvArg)
                 UG_SetForecolor(HOUSE_COLOR);
                 UG_PutString(HOUSE_X, IMPS_Y,         imps);
                 UG_PutString(HOUSE_X, WATTS_Y,        "        ");
+#ifdef DISPLAY_WATTS
                 UG_PutString(HOUSE_X, WATTS_Y,        watts);
+#endif
                 UG_PutString(HOUSE_X, WATTHOURS_Y,    watthours);
                 UG_PutString(HOUSE_X, WATTHOURSDAY_Y, watthoursday);
             }
