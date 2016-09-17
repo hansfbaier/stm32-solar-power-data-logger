@@ -110,9 +110,9 @@ void vLoggerTask(void * pvArg)
             
             if (&solarLogger == logger)
             {
-                GPIO_SetBits(GPIOB, GPIO_Pin_0);
+                GPIO_SetBits(GPIOB, GPIO_Pin_1);
                 vTaskDelay(10);                
-                GPIO_ResetBits(GPIOB, GPIO_Pin_0);
+                GPIO_ResetBits(GPIOB, GPIO_Pin_1);
                 
                 UG_SetForecolor(SOLAR_COLOR);
                 UG_PutString(SOLAR_X, IMPS_Y,         imps);
@@ -123,9 +123,9 @@ void vLoggerTask(void * pvArg)
             }
             else if (&houseLogger == logger)
             {
-                GPIO_SetBits(GPIOB, GPIO_Pin_1);
+                GPIO_SetBits(GPIOB, GPIO_Pin_0);
                 vTaskDelay(10);     
-                GPIO_ResetBits(GPIOB, GPIO_Pin_1);
+                GPIO_ResetBits(GPIOB, GPIO_Pin_0);
                 
                 UG_SetForecolor(HOUSE_COLOR);
                 UG_PutString(HOUSE_X, IMPS_Y,         imps);

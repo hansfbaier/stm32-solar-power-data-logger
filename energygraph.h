@@ -13,8 +13,8 @@
 
 #define BOTTOM MAX_Y
 #define MAX_CONSOLE_X (MAX_X - 112)
-#define SOLAR_X       (MAX_CONSOLE_X)
-#define HOUSE_X       (MAX_CONSOLE_X + 56)
+#define SOLAR_X       (MAX_CONSOLE_X + 56)
+#define HOUSE_X       (MAX_CONSOLE_X)
 
 #define MAX_BIN_Y MAX_Y/8
 #define CONSOLE_START_Y     (9)
