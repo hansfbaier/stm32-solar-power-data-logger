@@ -34,9 +34,7 @@ static void plotBinBar(EnergyLogger *logger, int binNo)
     int impsToDisplay = MIN(getBin(logger, binNo), MAX_DISP_IMPS);
     int yLength = (impsToDisplay * Y_RANGE) / MAX_DISP_IMPS;
     int binY = BOTTOM - yLength;
-    
-    char buffer[16];
-    
+        
     UG_DrawLine(binX, BOTTOM, binX, binY, gui.fore_color);
 }
 
