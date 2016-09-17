@@ -43,7 +43,6 @@
 
 /* Private function prototypes -----------------------------------------------*/
 static void prvSetupHardware(void);
-void vLCDTask(void * pvArg);
 void vLoggerTask(void * pvArg);
 void putchar(char ch);
 static void putf_serial(void * dummy, char ch);
@@ -59,7 +58,6 @@ int main(void)
     Init_Logging();
     
     xTaskCreate(vLoggerTask, (signed char * ) NULL, LOGGER_TASK_STACK_SIZE, NULL, LOGGER_TASK_PRIORITY, NULL);
-    //xTaskCreate(vLCDTask,    (signed char * ) NULL, LCD_TASK_STACK_SIZE,    NULL, LCD_TASK_PRIORITY,    NULL);
     /* Start the scheduler. */
     vTaskStartScheduler();
 
@@ -178,14 +176,6 @@ void UserPixelSetFunction(UG_S16 x, UG_S16 y, UG_COLOR c)
 }
 
 extern UG_GUI gui;
-
-void vLCDTask(void * pvArg)
-{        
-    while (1)
-    {
-        vTaskDelay(10000);
-    }
-}
 
 static void prvSetupHardware(void)
 {
