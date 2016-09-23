@@ -33,6 +33,10 @@
 #include "printf.h"
 #include "rtc.h"
 #include "hardware-config.h"
+#include "usb_istr.h"
+#include "usb_lib.h"
+#include "usb_pwr.h"
+
 
 /* Private define ------------------------------------------------------------*/
 #define LOGGER_TASK_STACK_SIZE		( 150 )
@@ -197,6 +201,9 @@ static void prvSetupHardware(void)
     init_printf(NULL, putf_serial);
     RTC_Init();
     TIM_Configuration();
+    Set_USBClock();
+    USB_Interrupts_Config();
+    USB_Init();
     
     LCD_Initialization();
     LCD_Clear(Black);
@@ -285,6 +292,24 @@ void EXTI1_IRQHandler(void)
     }
 }
 
+void TIM2_IRQHandler(void)
+{
+    if ( TIM_GetITStatus(TIM2 , TIM_IT_Update) != RESET ) 
+    {
+       TIM_ClearITPendingBit(TIM2 , TIM_FLAG_Update);
+    }   
+}
+
+void USB_LP_CAN1_RX0_IRQHandler(void)
+{
+  USB_Istr();
+}
+
+void USB_HP_CAN1_TX_IRQHandler(void)
+{
+  CTR_HP();
+}
+
 void __attribute((__naked__)) HardFault_Handler( void )
 {
     __asm volatile
@@ -298,14 +323,6 @@ void __attribute((__naked__)) HardFault_Handler( void )
         " bx r2                                                     \n"
         " handler2_address_const: .word prvGetRegistersFromStack    \n"
     );
-}
-
-void TIM2_IRQHandler(void)
-{
-    if ( TIM_GetITStatus(TIM2 , TIM_IT_Update) != RESET ) 
-    {
-       TIM_ClearITPendingBit(TIM2 , TIM_FLAG_Update);
-    }   
 }
 
 void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )

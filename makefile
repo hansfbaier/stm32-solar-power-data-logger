@@ -18,6 +18,8 @@ STARTUP_FILE = stm32f10x_hd
 #DEVICE_TYPE = STM32F10X_CL
 #STARTUP_FILE = stm32f10x_cl
 
+export DEVICE_TYPE
+
 # Set the external clock frequency
 HSE_VALUE = 8000000L
 
@@ -36,7 +38,7 @@ FWLIB = lib/STM32F10x_StdPeriph_Driver/libstm32fw.a
 #             (instead of direct register access)
 USE_STDPERIPH_DRIVER = -DUSE_STDPERIPH_DRIVER
 # [OPTIONAL] Uncomment to use the USB library
-#USBLIB = lib/STM32_USB-FS-Device_Driver/libstm32usb.a
+USBLIB = lib/STM32_USB-FS-Device_Driver/libstm32usb.a
 
 # [OPTIONAL] Uncomment to link to maths library libm
 #LIBM = -lm
@@ -48,7 +50,7 @@ TARGET_ARCH = -mcpu=cortex-m3 -mthumb
 
 INCLUDE_DIRS = -I . -I lib/STM32F10x_StdPeriph_Driver/inc\
  -I lib/STM32F10x_StdPeriph_Driver -I lib/CMSIS_CM3\
- -I lib/STM32_USB-FS-Device_Driver/inc\
+ -I lib/STM32_USB-FS-Device_Driver/inc -I USB/inc\
  -I FreeRTOS/include -I FreeRTOS/portable/GCC/ARM_CM3/
 
 LIBRARY_DIRS = -L lib/STM32F10x_StdPeriph_Driver/\
@@ -101,6 +103,7 @@ MAIN_OBJS = $(sort \
  $(patsubst %.c,%.o,$(wildcard FreeRTOS/portable/GCC/ARM_CM3/*.c)) \
  $(patsubst %.c,%.o,$(wildcard FreeRTOS/portable/MemMang/*.c)) \
  $(patsubst %.c,%.o,$(wildcard FreeRTOS/*.c)) \
+ $(patsubst %.c,%.o,$(wildcard USB/*.c)) \
  $(patsubst %.c,%.o,$(wildcard lib/CMSIS_CM3/*.c)) \
  $(STARTUP_OBJ))
 
