@@ -201,9 +201,6 @@ static void prvSetupHardware(void)
     init_printf(NULL, putf_serial);
     RTC_Init();
     TIM_Configuration();
-    Set_USBClock();
-    USB_Interrupts_Config();
-    USB_Init();
     
     LCD_Initialization();
     LCD_Clear(Black);
@@ -218,6 +215,12 @@ static void prvSetupHardware(void)
     UG_ConsoleSetForecolor(C_GREEN);
     UG_ConsoleSetBackcolor(C_BLACK);
     init_printf(NULL, putf_gui);
+    
+    printf("initializing USB...\n");
+    Set_System();
+    Set_USBClock();
+    USB_Interrupts_Config();
+    USB_Init();
 }
 
 
@@ -283,7 +286,6 @@ void EXTI1_IRQHandler(void)
         // debounce broken house meter output
         if (impTimer - houseLogger.impTimer > 200)
         {
-            printf("impT: %d last impT: %d\n", impTimer, houseLogger.impTimer);
             EnergyLogger *houseLoggerPtr = &houseLogger;
             houseLogger.lastImpTimer = houseLogger.impTimer;
             houseLogger.impTimer = impTimer;
