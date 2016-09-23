@@ -276,7 +276,6 @@ void EXTI1_IRQHandler(void)
         // debounce broken house meter output
         if (impTimer - houseLogger.impTimer > 200)
         {
-            //printf("impT: %d last impT: %d\n", impTimer, houseLogger.impTimer);
             EnergyLogger *houseLoggerPtr = &houseLogger;
             houseLogger.lastImpTimer = houseLogger.impTimer;
             houseLogger.impTimer = impTimer;
