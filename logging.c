@@ -98,6 +98,7 @@ void addImp(EnergyLogger *logger)
 void newBin(EnergyLogger *logger)
 {    
     logger->currentBinNo = (logger->currentBinNo + 1) % NUM_BINS;
+    logger->bins[logger->currentBinNo] = 0;
     if (0 == logger->currentBinNo)
     {
         logger->impsToday = 0;
