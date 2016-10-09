@@ -24,7 +24,7 @@ void NVIC_Configuration(void)
   NVIC_InitTypeDef NVIC_InitStructure;
 
   /* Configure one bit for preemption priority */
-  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
   /* Enable the RTC Interrupt */
   NVIC_InitStructure.NVIC_IRQChannel = RTC_IRQn;
