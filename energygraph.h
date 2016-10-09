@@ -25,7 +25,7 @@
 #define WATTHOURSDAY_Y (9)
 #define Y_RANGE (MAX_Y - MAX_BIN_Y)
 
-#define MAX_DISP_IMPS 320
+#define MAX_DISP_IMPS 160
 
 void plotBin(int binNo);
 void printZeroedCounters();
