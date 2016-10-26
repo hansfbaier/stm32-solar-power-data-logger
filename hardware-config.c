@@ -1,5 +1,6 @@
 #include "hardware-config.h"
 #include "stm32f10x.h"
+#include "stm32f10x_iwdg.h"
 #include "printf.h"
 
 void EXTI_Configuration(void)
@@ -98,6 +99,15 @@ void GPIO_Configuration(void)
     
     GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource0);
     GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource1);
+}
+
+void IWDG_Configuration(void)
+{
+  IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
+  IWDG_SetPrescaler(IWDG_Prescaler_256);            /* 40K/256=156HZ(6.4ms) */
+  IWDG_SetReload(781);                              /* 5s/6.4MS=781*/
+  IWDG_ReloadCounter();
+  IWDG_Enable();
 }
 
 void USART_Configuration(void)

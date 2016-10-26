@@ -40,14 +40,15 @@
 
 /* Private define ------------------------------------------------------------*/
 #define LOGGER_TASK_STACK_SIZE		( 150 )
-#define LCD_TASK_STACK_SIZE			( configMINIMAL_STACK_SIZE )
+#define IWDG_TASK_STACK_SIZE       ( configMINIMAL_STACK_SIZE )
 
-#define LOGGER_TASK_PRIORITY		( tskIDLE_PRIORITY + 2 )
-#define LCD_TASK_PRIORITY			( tskIDLE_PRIORITY + 1 )
+#define IWDG_TASK_PRIORITY         ( tskIDLE_PRIORITY + 2 )
+#define LOGGER_TASK_PRIORITY		( tskIDLE_PRIORITY + 1 )
 
 /* Private function prototypes -----------------------------------------------*/
 static void prvSetupHardware(void);
-void vLoggerTask(void * pvArg);
+void vLoggerTask(void *pvArg);
+void vIwdgTask(void *pvArg);
 void putchar(char ch);
 static void putf_serial(void * dummy, char ch);
 static void putf_gui(void * dummy, char ch);
@@ -57,10 +58,16 @@ xQueueHandle slotQueue = NULL;
 
 int main(void)
 {
+    if(RCC_GetFlagStatus(RCC_FLAG_IWDGRST) != RESET)
+    {
+       RCC_ClearFlag();
+    }
+
     prvSetupHardware();
     
     Init_Logging();
     
+    xTaskCreate(vIwdgTask,   (signed char * ) NULL, IWDG_TASK_STACK_SIZE,   NULL, IWDG_TASK_PRIORITY,   NULL);
     xTaskCreate(vLoggerTask, (signed char * ) NULL, LOGGER_TASK_STACK_SIZE, NULL, LOGGER_TASK_PRIORITY, NULL);
     /* Start the scheduler. */
     vTaskStartScheduler();
@@ -179,6 +186,16 @@ void vLoggerTask(void * pvArg)
                 }
             }
         }
+    }
+}
+
+void vIwdgTask(void *pvArg)
+{
+    while (1)
+    {
+        IWDG_ReloadCounter();
+        printf("W");
+        vTaskDelay(2000);
     }
 }
 
