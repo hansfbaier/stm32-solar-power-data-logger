@@ -67,7 +67,7 @@ int main(void)
     prvSetupHardware();
     
     Init_Logging();
-    if (RESET == iwdgReset) { printf("\nIWDG-RESET"); }
+    if (RESET != iwdgReset) { printf("\nIWDG-RESET"); }
     
     xTaskCreate(vIwdgTask,   (signed char * ) NULL, IWDG_TASK_STACK_SIZE,   NULL, IWDG_TASK_PRIORITY,   NULL);
     xTaskCreate(vLoggerTask, (signed char * ) NULL, LOGGER_TASK_STACK_SIZE, NULL, LOGGER_TASK_PRIORITY, NULL);
@@ -240,8 +240,8 @@ static void prvSetupHardware(void)
     Set_USBClock();
     USB_Interrupts_Config();
     USB_Init();
+    IWDG_Configuration();
 }
-
 
 void putchar(char ch)
 {
