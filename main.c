@@ -84,6 +84,8 @@ void vLoggerTask(void * pvArg)
 {    
     EnergyLogger *logger;
     int seconds;
+
+    clearGraph();
     
     impQueue  = xQueueCreate(10, sizeof(EnergyLogger *));
     slotQueue = xQueueCreate(10, sizeof(int));
@@ -93,8 +95,7 @@ void vLoggerTask(void * pvArg)
         uint32_t currentRtc = RTC_GetCounter();
         if (0 == currentRtc % ONE_DAY)
         {
-            // clear graph
-            UG_DrawFrame(0, MAX_BIN_Y, MAX_CONSOLE_X, MAX_Y, C_BLACK);
+            clearGraph();
         }
         
         if (xQueueReceive(impQueue, &logger, 10))

@@ -10,7 +10,10 @@
 
 #define SOLAR_COLOR C_YELLOW
 #define HOUSE_COLOR C_BLUE
+#define GRID_COLOR C_CHOCOLATE
 
+#define WATT_HOURS_PER_IMP (0.625f)
+#define WATT_PER_IMP_AND_BIN (7.5f)
 #define BOTTOM MAX_Y
 #define MAX_CONSOLE_X (MAX_X - 112)
 #define SOLAR_X       (MAX_CONSOLE_X + 56)
@@ -29,5 +32,6 @@
 
 void plotBin(int binNo);
 void printZeroedCounters();
+void clearGraph();
 
 #endif /* ENERGYGRAPH_H_ */
