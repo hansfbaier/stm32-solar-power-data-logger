@@ -8,6 +8,8 @@
 #ifndef ENERGYGRAPH_H_
 #define ENERGYGRAPH_H_
 
+#include "logging.h"
+
 #define SOLAR_COLOR C_YELLOW
 #define HOUSE_COLOR C_BLUE
 #define GRID_COLOR C_CHOCOLATE
@@ -20,6 +22,7 @@
 #define HOUSE_X       (MAX_CONSOLE_X)
 
 #define MAX_BIN_Y MAX_Y/8
+#define MAX_BIN_X NUM_BINS
 #define CONSOLE_START_Y     (9)
 #define CONSOLE_END_Y       (MAX_BIN_Y)
 #define IMPS_Y         (27)
