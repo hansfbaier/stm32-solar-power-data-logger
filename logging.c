@@ -168,6 +168,17 @@ void seek_until(char delimiter)
     }
 }
 
+int my_atoi(char *p)
+{
+    int k = 0;
+    while (' ' == *p) p++;
+    while (*p) {
+      k = k*10 + (*p) - '0';
+      p++;
+    }
+    return k;
+}
+
 int read_number_until(char delimiter)
 {
     char buf[32];
