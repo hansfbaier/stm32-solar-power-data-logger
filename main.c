@@ -33,17 +33,25 @@
 #include "printf.h"
 #include "rtc.h"
 #include "hardware-config.h"
+#include "usb_istr.h"
+#include "usb_lib.h"
+#include "usb_pwr.h"
+
 
 /* Private define ------------------------------------------------------------*/
 #define LOGGER_TASK_STACK_SIZE		( 150 )
-#define LCD_TASK_STACK_SIZE			( configMINIMAL_STACK_SIZE )
+#define IWDG_TASK_STACK_SIZE       ( configMINIMAL_STACK_SIZE )
+#define UART_TASK_STACK_SIZE       ( configMINIMAL_STACK_SIZE )
 
+#define IWDG_TASK_PRIORITY         ( tskIDLE_PRIORITY + 3 )
 #define LOGGER_TASK_PRIORITY		( tskIDLE_PRIORITY + 2 )
-#define LCD_TASK_PRIORITY			( tskIDLE_PRIORITY + 1 )
+#define UART_TASK_PRIORITY         ( tskIDLE_PRIORITY + 1 )
 
 /* Private function prototypes -----------------------------------------------*/
 static void prvSetupHardware(void);
-void vLoggerTask(void * pvArg);
+void vLoggerTask(void *pvArg);
+void vIwdgTask(void *pvArg);
+void vUartTask(void *pvArg);
 void putchar(char ch);
 static void putf_serial(void * dummy, char ch);
 static void putf_gui(void * dummy, char ch);
@@ -53,11 +61,19 @@ xQueueHandle slotQueue = NULL;
 
 int main(void)
 {
+    FlagStatus iwdgReset = RCC_GetFlagStatus(RCC_FLAG_IWDGRST);
+    if(iwdgReset != RESET)
+    {
+       RCC_ClearFlag();
+    }
+
     prvSetupHardware();
     
-    Init_Logging();
+    if (RESET != iwdgReset) { printf("\nIWDG-RESET"); }
     
+    xTaskCreate(vIwdgTask,   (signed char * ) NULL, IWDG_TASK_STACK_SIZE,   NULL, IWDG_TASK_PRIORITY,   NULL);
     xTaskCreate(vLoggerTask, (signed char * ) NULL, LOGGER_TASK_STACK_SIZE, NULL, LOGGER_TASK_PRIORITY, NULL);
+    xTaskCreate(vUartTask,   (signed char * ) NULL, UART_TASK_STACK_SIZE,   NULL, UART_TASK_PRIORITY,   NULL);
     /* Start the scheduler. */
     vTaskStartScheduler();
 
@@ -68,20 +84,26 @@ extern EnergyLogger solarLogger;
 extern EnergyLogger houseLogger;
 
 void vLoggerTask(void * pvArg)
-{    
+{   
     EnergyLogger *logger;
     int seconds;
+
+    clearGraph();
+    static char buf[16];
+    
+    Init_Logging();
     
     impQueue  = xQueueCreate(10, sizeof(EnergyLogger *));
     slotQueue = xQueueCreate(10, sizeof(int));
+    
+    EXTI_Configuration();
     
     while (1)
     {
         uint32_t currentRtc = RTC_GetCounter();
         if (0 == currentRtc % ONE_DAY)
         {
-            // clear graph
-            UG_DrawFrame(0, MAX_BIN_Y, MAX_CONSOLE_X, MAX_Y, C_BLACK);
+            clearGraph();
         }
         
         if (xQueueReceive(impQueue, &logger, 10))
@@ -89,9 +111,8 @@ void vLoggerTask(void * pvArg)
             configASSERT(NULL != logger);
             addImp(logger);
             
-            char imps[10];
             int impsThisBin = getCurrentBin(logger);
-            sprintf(imps, "%4d", impsThisBin);
+            sprintf(buf, "%4d", impsThisBin);
             
 #ifdef DISPLAY_WATTS
             char watts[10];
@@ -118,7 +139,7 @@ void vLoggerTask(void * pvArg)
                 GPIO_ResetBits(GPIOB, GPIO_Pin_1);
                 
                 UG_SetForecolor(SOLAR_COLOR);
-                UG_PutString(SOLAR_X, IMPS_Y,         imps);
+                UG_PutString(SOLAR_X, IMPS_Y,         buf);
                 UG_PutString(SOLAR_X, WATTS_Y,        "        ");
 #ifdef DISPLAY_WATTS
                 UG_PutString(SOLAR_X, WATTS_Y,        watts);
@@ -133,7 +154,7 @@ void vLoggerTask(void * pvArg)
                 GPIO_ResetBits(GPIOB, GPIO_Pin_0);
                 
                 UG_SetForecolor(HOUSE_COLOR);
-                UG_PutString(HOUSE_X, IMPS_Y,         imps);
+                UG_PutString(HOUSE_X, IMPS_Y,         buf);
                 UG_PutString(HOUSE_X, WATTS_Y,        "        ");
 #ifdef DISPLAY_WATTS
                 UG_PutString(HOUSE_X, WATTS_Y,        watts);
@@ -148,7 +169,6 @@ void vLoggerTask(void * pvArg)
         if (xQueueReceive(slotQueue, &seconds, 10))
         {            
             UG_SetForecolor(C_WHITE);
-            char buf[6];
             sprintf(buf, "%5d", TIM_GetCounter(TIM2));
             UG_PutString(MAX_CONSOLE_X + 7, 0, buf);
 
@@ -167,7 +187,7 @@ void vLoggerTask(void * pvArg)
                 
                 if (0 == solarLogger.currentBinNo)
                 {
-                    char buf[15];
+                    clearGraph();
                     sprintf(buf, "Day %d", (int)(RTC_GetCounter() / ONE_DAY));
                     UG_SetForecolor(C_WHITE);
                     UG_PutString(MAX_X/2 - 2 * 9, 0, buf);
@@ -175,6 +195,38 @@ void vLoggerTask(void * pvArg)
                 }
             }
         }
+    }
+}
+
+void vIwdgTask(void *pvArg)
+{
+    while (1)
+    {
+        IWDG_ReloadCounter();
+        printf("W");
+        vTaskDelay(2000);
+    }
+}
+
+void vUartTask(void *pvArg)
+{
+    static char buf[24];
+
+    while (1)
+    {
+        while (USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET) vTaskDelay(100);
+        uint8_t command = USART_ReceiveData(USART1) & 0xFF;
+        if ('S' == command)
+        {
+            sprintf(buf, "%d,%d\n", solarLogger.impsToday, houseLogger.impsToday);
+
+            for (int i = 0; 0 != buf[i]; i++)
+            {
+                putf_serial(NULL, buf[i]);
+            }
+        }
+        
+        vTaskDelay(100);
     }
 }
 
@@ -191,7 +243,6 @@ static void prvSetupHardware(void)
     /* Configure HCLK clock as SysTick clock source. */
     SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
     GPIO_Configuration();
-    EXTI_Configuration();
     NVIC_Configuration();
     USART_Configuration();
     init_printf(NULL, putf_serial);
@@ -211,8 +262,14 @@ static void prvSetupHardware(void)
     UG_ConsoleSetForecolor(C_GREEN);
     UG_ConsoleSetBackcolor(C_BLACK);
     init_printf(NULL, putf_gui);
+    
+    printf("initializing USB...\n");
+    Set_System();
+    Set_USBClock();
+    USB_Interrupts_Config();
+    USB_Init();
+    IWDG_Configuration();
 }
-
 
 void putchar(char ch)
 {
@@ -238,38 +295,46 @@ static void putf_gui(void *dummy, char ch)
     UG_ConsolePutString(buf);
 }
 
-static long int dummy;
-
 #define FIVE_MINUTES (60 * 5)
 void RTC_IRQHandler(void)
 {
+    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+    
     RTC_ClearITPendingBit(RTC_IT_SEC);
     static int seconds;
     
     seconds = RTC_GetCounter() % FIVE_MINUTES;
-    if (slotQueue) { xQueueSendFromISR(slotQueue, &seconds, &dummy); }   
+    if (slotQueue) { xQueueSendFromISR(slotQueue, &seconds, &xHigherPriorityTaskWoken); }
+    
+    portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
 void EXTI0_IRQHandler(void)
 {    
+    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+    
     if (EXTI_GetITStatus(EXTI_Line0) != RESET)
     {
         EXTI_ClearITPendingBit(EXTI_Line0);
         EnergyLogger *solarLoggerPtr = &solarLogger;
         solarLogger.lastImpTimer = solarLogger.impTimer;
         solarLogger.impTimer = TIM_GetCounter(TIM2);
-        if (impQueue) { xQueueSendFromISR(impQueue, &solarLoggerPtr, &dummy); }
+        if (impQueue) { xQueueSendFromISR(impQueue, &solarLoggerPtr, &xHigherPriorityTaskWoken); }
     }
+    
+    portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
 void EXTI1_IRQHandler(void)
 {    
+    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+
     if (EXTI_GetITStatus(EXTI_Line1) != RESET)
     {
         EXTI_ClearITPendingBit(EXTI_Line1);
         int impTimer = TIM_GetCounter(TIM2);
       
-	UG_ConsolePutString(".");
+        UG_ConsolePutString(".");
         if (impTimer < houseLogger.impTimer)
         {
             houseLogger.impTimer -= 64000;
@@ -277,13 +342,33 @@ void EXTI1_IRQHandler(void)
         // debounce broken house meter output
         if (impTimer - houseLogger.impTimer > 200)
         {
-	    UG_ConsolePutString("X");
+            UG_ConsolePutString("X");
             EnergyLogger *houseLoggerPtr = &houseLogger;
             houseLogger.lastImpTimer = houseLogger.impTimer;
             houseLogger.impTimer = impTimer;
-            if (impQueue) { xQueueSendFromISR(impQueue, &houseLoggerPtr, &dummy); }
+            if (impQueue) { xQueueSendFromISR(impQueue, &houseLoggerPtr, &xHigherPriorityTaskWoken); }
         }
     }
+    
+    portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
+}
+
+void TIM2_IRQHandler(void)
+{
+    if ( TIM_GetITStatus(TIM2 , TIM_IT_Update) != RESET ) 
+    {
+       TIM_ClearITPendingBit(TIM2 , TIM_FLAG_Update);
+    }   
+}
+
+void USB_LP_CAN1_RX0_IRQHandler(void)
+{
+  USB_Istr();
+}
+
+void USB_HP_CAN1_TX_IRQHandler(void)
+{
+  CTR_HP();
 }
 
 void __attribute((__naked__)) HardFault_Handler( void )
@@ -299,14 +384,6 @@ void __attribute((__naked__)) HardFault_Handler( void )
         " bx r2                                                     \n"
         " handler2_address_const: .word prvGetRegistersFromStack    \n"
     );
-}
-
-void TIM2_IRQHandler(void)
-{
-    if ( TIM_GetITStatus(TIM2 , TIM_IT_Update) != RESET ) 
-    {
-       TIM_ClearITPendingBit(TIM2 , TIM_FLAG_Update);
-    }   
 }
 
 void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )

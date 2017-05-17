@@ -1,12 +1,12 @@
 # Compile the STM32F10x USB Full Speed Library
 
 TARGET_ARCH = -mcpu=cortex-m3 -mthumb
-TARGET_OPTS = -O2 -finline -finline-functions-called-once
+TARGET_OPTS = -Os -finline -finline-functions-called-once
 WARNINGS = -Wall -W -Wshadow -Wwrite-strings -Winline
 INCLUDE_DIRS = -I inc -I ../CMSIS_CM3 -I ../STM32F10x_StdPeriph_Driver -I ../STM32F10x_StdPeriph_Driver/inc -I .
 F_NO_STRICT_ALIASING = -fno-strict-aliasing
 
-COMPILE_OPTS = $(WARNINGS) $(TARGET_OPTS) $(MESSAGES) $(F_NO_STRICT_ALIASING) $(INCLUDE_DIRS)
+COMPILE_OPTS = -D$(DEVICE_TYPE) $(WARNINGS) $(TARGET_OPTS) $(MESSAGES) $(F_NO_STRICT_ALIASING) $(INCLUDE_DIRS)
 
 CC = arm-none-eabi-gcc
 CFLAGS = $(COMPILE_OPTS)

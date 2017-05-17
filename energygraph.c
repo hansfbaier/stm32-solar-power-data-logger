@@ -9,6 +9,7 @@
 #include "ugui.h"
 #include "energygraph.h"
 #include "logging.h"
+#include "printf.h"
 
 UG_GUI gui;
 
@@ -17,6 +18,23 @@ extern EnergyLogger houseLogger;
 
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
+
+void clearGraph()
+{
+    char buf[15];
+    sprintf(buf, "Day %d", (int)(RTC_GetCounter() / ONE_DAY));
+    UG_SetForecolor(C_WHITE);
+    UG_PutString(MAX_X/2 - 2 * 9, 0, buf);
+
+    UG_FillFrame(0, MAX_BIN_Y, MAX_BIN_X, MAX_Y, C_BLACK);
+    float pixelsPerImp = ((float)Y_RANGE / (float)MAX_DISP_IMPS);
+    float hundredWattsY = pixelsPerImp * 100.0f / WATT_PER_IMP_AND_BIN;
+    float y = MAX_Y - hundredWattsY;
+    while (y > MAX_BIN_Y) {
+      UG_DrawLine(0, (UG_S16)y, MAX_BIN_X, (UG_S16)y, GRID_COLOR);
+      y -= hundredWattsY;
+    }
+}
 
 void printZeroedCounters()
 {

@@ -11,6 +11,7 @@
 void EXTI_Configuration(void);
 void NVIC_Configuration(void);
 void GPIO_Configuration(void);
+void IWDG_Configuration(void);
 void USART_Configuration(void);
 void TIM_Configuration(void);
 void RTC_Init(void);
