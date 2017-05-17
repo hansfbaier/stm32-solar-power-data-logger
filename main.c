@@ -69,14 +69,12 @@ int main(void)
 
     prvSetupHardware();
     
-    Init_Logging();
     if (RESET != iwdgReset) { printf("\nIWDG-RESET"); }
     
     xTaskCreate(vIwdgTask,   (signed char * ) NULL, IWDG_TASK_STACK_SIZE,   NULL, IWDG_TASK_PRIORITY,   NULL);
     xTaskCreate(vLoggerTask, (signed char * ) NULL, LOGGER_TASK_STACK_SIZE, NULL, LOGGER_TASK_PRIORITY, NULL);
     xTaskCreate(vUartTask,   (signed char * ) NULL, UART_TASK_STACK_SIZE,   NULL, UART_TASK_PRIORITY,   NULL);
     /* Start the scheduler. */
-    EXTI_Configuration();
     vTaskStartScheduler();
 
     return 0;
@@ -93,8 +91,12 @@ void vLoggerTask(void * pvArg)
     clearGraph();
     static char buf[16];
     
+    Init_Logging();
+    
     impQueue  = xQueueCreate(10, sizeof(EnergyLogger *));
     slotQueue = xQueueCreate(10, sizeof(int));
+    
+    EXTI_Configuration();
     
     while (1)
     {
