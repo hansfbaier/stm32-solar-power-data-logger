@@ -267,38 +267,46 @@ static void putf_gui(void *dummy, char ch)
     UG_ConsolePutString(buf);
 }
 
-static long int dummy;
-
 #define FIVE_MINUTES (60 * 5)
 void RTC_IRQHandler(void)
 {
+    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+    
     RTC_ClearITPendingBit(RTC_IT_SEC);
     static int seconds;
     
     seconds = RTC_GetCounter() % FIVE_MINUTES;
-    if (slotQueue) { xQueueSendFromISR(slotQueue, &seconds, &dummy); }   
+    if (slotQueue) { xQueueSendFromISR(slotQueue, &seconds, &xHigherPriorityTaskWoken); }
+    
+    portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
 void EXTI0_IRQHandler(void)
 {    
+    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+    
     if (EXTI_GetITStatus(EXTI_Line0) != RESET)
     {
         EXTI_ClearITPendingBit(EXTI_Line0);
         EnergyLogger *solarLoggerPtr = &solarLogger;
         solarLogger.lastImpTimer = solarLogger.impTimer;
         solarLogger.impTimer = TIM_GetCounter(TIM2);
-        if (impQueue) { xQueueSendFromISR(impQueue, &solarLoggerPtr, &dummy); }
+        if (impQueue) { xQueueSendFromISR(impQueue, &solarLoggerPtr, &xHigherPriorityTaskWoken); }
     }
+    
+    portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
 void EXTI1_IRQHandler(void)
 {    
+    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+
     if (EXTI_GetITStatus(EXTI_Line1) != RESET)
     {
         EXTI_ClearITPendingBit(EXTI_Line1);
         int impTimer = TIM_GetCounter(TIM2);
       
-	UG_ConsolePutString(".");
+        UG_ConsolePutString(".");
         if (impTimer < houseLogger.impTimer)
         {
             houseLogger.impTimer -= 64000;
@@ -310,9 +318,11 @@ void EXTI1_IRQHandler(void)
             EnergyLogger *houseLoggerPtr = &houseLogger;
             houseLogger.lastImpTimer = houseLogger.impTimer;
             houseLogger.impTimer = impTimer;
-            if (impQueue) { xQueueSendFromISR(impQueue, &houseLoggerPtr, &dummy); }
-        }
+            if (impQueue) { xQueueSendFromISR(impQueue, &houseLoggerPtr, &xHigherPriorityTaskWoken); }
+        }        
     }
+    
+    portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
 void TIM2_IRQHandler(void)
