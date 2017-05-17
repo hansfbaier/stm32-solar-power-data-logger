@@ -314,12 +314,12 @@ void EXTI1_IRQHandler(void)
         // debounce broken house meter output
         if (impTimer - houseLogger.impTimer > 200)
         {
-	    UG_ConsolePutString("X");
+            UG_ConsolePutString("X");
             EnergyLogger *houseLoggerPtr = &houseLogger;
             houseLogger.lastImpTimer = houseLogger.impTimer;
             houseLogger.impTimer = impTimer;
             if (impQueue) { xQueueSendFromISR(impQueue, &houseLoggerPtr, &xHigherPriorityTaskWoken); }
-        }        
+        }
     }
     
     portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
