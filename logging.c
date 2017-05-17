@@ -82,7 +82,7 @@ void Init_Logging(void)
         if (FR_OK != res)
         {
             PrintFileError(res, "seeking log file");
-        }
+        }        
     }
 
     //scan_files(path);
@@ -132,7 +132,7 @@ int getLastBin(EnergyLogger *logger)
 void Write_Log_Entry(void)
 {
     char buf[128];
-    int day = (int)(RTC_GetCounter() / ONE_DAY);
+    int day = TODAY;
     sprintf(buf, "%d,%s,%4d,%4d\n", day, Time_As_String(), getLastBin(&solarLogger), getLastBin(&houseLogger));
     res = f_write(&fsrc, buf, strlen(buf), &br);
     if (FR_OK != res)
@@ -146,6 +146,98 @@ void Write_Log_Entry(void)
     }
     UG_ConsoleSetForecolor(C_GREEN);
 }
+
+void seek_until(char delimiter)
+{
+    char buf[2];
+    int bytes_read;
+
+    while (!f_eof(&fsrc))
+    {
+        res = f_read(&fsrc, buf, 1, &bytes_read);
+        if (FR_OK != res)
+        {
+            PrintFileError(res, "reading from file");
+            return;
+        }
+        
+        if (delimiter == buf[0]) break;
+    }
+}
+
+int read_number_until(char delimiter)
+{
+    char buf[32];
+    int result = -1;
+    int bytes_read = 0;
+    int i = 0;
+    
+    while (1)
+    {
+        res = f_read(&fsrc, buf + i, 1, &bytes_read);
+        if (FR_OK != res)
+        {
+            PrintFileError(res, "reading from file");
+            return -1;
+        }
+        i++;
+                
+        if (delimiter == buf[i] || f_eof(&fsrc))
+        {
+            buf[i] = 0;
+            break;
+        }
+    }
+    
+    return my_atoi(buf);
+}
+
+void Restore_Today(void)
+{
+    res = f_lseek(&fsrc, 0);
+    if (FR_OK != res)
+    {
+        PrintFileError(res, "seeking start of log file");
+        return;
+    }
+    
+    int day = 0;
+    int today = TODAY;
+    do
+    {
+        seek_until('\n');
+        day = read_number_until(',');        
+    } while (day != today);
+        
+    if (-1 == day) goto bye;
+
+    while (!f_eof(&fsrc))
+    {
+        int hour = read_number_until(':');
+        int minute = read_number_until(':');
+        int bin = (hour * 60 + minute) / 5;
+        seek_until(',');
+        int solarImps = read_number_until(',');
+        int houseImps = read_number_until('\n');
+        solarLogger.currentBinNo = bin;
+        solarLogger.bins[bin] = solarImps;
+        solarLogger.impsToday += solarImps;
+        houseLogger.currentBinNo = bin;
+        houseLogger.bins[bin] = houseImps;        
+        houseLogger.impsToday += houseImps;
+        
+        plotBin(bin);
+    }
+    
+    bye:
+    res = f_lseek(&fsrc, fsrc.fsize);
+    if (FR_OK != res)
+    {
+        PrintFileError(res, "seeking start of log file");
+    }
+}
+
+
 
 FRESULT scan_files (char* path)
 {

@@ -15,4 +15,6 @@ uint32_t Time_Regulate(void);
 void Time_Adjust(void);
 char *Time_As_String();
 
+#define TODAY ((int)(RTC_GetCounter() / ONE_DAY))
+
 #endif /* RTC_H_ */
