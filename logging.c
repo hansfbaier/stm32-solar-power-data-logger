@@ -150,7 +150,7 @@ void Write_Log_Entry(void)
 void seek_until(char delimiter)
 {
     char buf[2];
-    int bytes_read;
+    unsigned int bytes_read;
 
     while (!f_eof(&fsrc))
     {
@@ -168,8 +168,7 @@ void seek_until(char delimiter)
 int read_number_until(char delimiter)
 {
     char buf[32];
-    int result = -1;
-    int bytes_read = 0;
+    unsigned int bytes_read = 0;
     int i = 0;
     
     while (1)
