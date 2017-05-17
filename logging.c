@@ -13,6 +13,7 @@
 
 FRESULT scan_files (char* path);
 int SD_TotalSize(void);
+void Restore_Today(void);
 
 EnergyLogger solarLogger;
 EnergyLogger houseLogger;
@@ -76,6 +77,8 @@ void Init_Logging(void)
         {
             PrintFileError(res, "opening log file");
         }
+        
+        Restore_Today();
         
         // go to end of file
         res = f_lseek(&fsrc, fsrc.fsize);
