@@ -97,6 +97,7 @@ void vLoggerTask(void * pvArg)
     slotQueue = xQueueCreate(10, sizeof(int));
     
     EXTI_Configuration();
+    IWDG_Configuration();
     
     while (1)
     {
@@ -268,7 +269,6 @@ static void prvSetupHardware(void)
     Set_USBClock();
     USB_Interrupts_Config();
     USB_Init();
-    IWDG_Configuration();
 }
 
 void putchar(char ch)
