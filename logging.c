@@ -233,6 +233,7 @@ void Restore_Today(void)
         seek_until(',');
         int solarImps = read_number_until(',');
         int houseImps = read_number_until('\n');
+        int day = read_number_until(',');
         solarLogger.currentBinNo = bin;
         solarLogger.bins[bin] = solarImps;
         solarLogger.impsToday += solarImps;
