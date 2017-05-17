@@ -182,13 +182,14 @@ int read_number_until(char delimiter)
             PrintFileError(res, "reading from file");
             return -1;
         }
-        i++;
                 
         if (delimiter == buf[i] || f_eof(&fsrc))
         {
             buf[i] = 0;
             break;
         }
+
+        i++;
     }
     
     return my_atoi(buf);
