@@ -76,6 +76,7 @@ int main(void)
     xTaskCreate(vLoggerTask, (signed char * ) NULL, LOGGER_TASK_STACK_SIZE, NULL, LOGGER_TASK_PRIORITY, NULL);
     xTaskCreate(vUartTask,   (signed char * ) NULL, UART_TASK_STACK_SIZE,   NULL, UART_TASK_PRIORITY,   NULL);
     /* Start the scheduler. */
+    EXTI_Configuration();
     vTaskStartScheduler();
 
     return 0;
@@ -240,7 +241,6 @@ static void prvSetupHardware(void)
     /* Configure HCLK clock as SysTick clock source. */
     SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
     GPIO_Configuration();
-    EXTI_Configuration();
     NVIC_Configuration();
     USART_Configuration();
     init_printf(NULL, putf_serial);
