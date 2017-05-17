@@ -181,7 +181,7 @@ int my_atoi(char *p)
 
 int read_number_until(char delimiter)
 {
-    char buf[32];
+    static char buf[32];
     unsigned int bytes_read = 0;
     int i = 0;
     
