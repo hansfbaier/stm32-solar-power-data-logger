@@ -111,9 +111,20 @@ regs Kusti, 23.10.2004
 void init_printf(void* putp,void (*putf) (void*,char));
 
 void tfp_printf(char *fmt, ...);
-void tfp_sprintf(char* s,char *fmt, ...);
+void tfp_sprintf(char* s, char *fmt, ...);
 
 void tfp_format(void* putp,void (*putf) (void*,char),char *fmt, va_list va);
+
+inline int my_atoi(char *p)
+{
+    int k = 0;
+    while (' ' == *p) p++;
+    while (*p) {
+      k = k*10 + (*p) - '0';
+      p++;
+    }
+    return k;
+}
 
 #define printf tfp_printf 
 #define sprintf tfp_sprintf 
