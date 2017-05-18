@@ -54,7 +54,7 @@ void Init_Logging(void)
 
     f_mount(0, &fs);
 
-    res = f_open(&fsrc, "0:/WattLog.csv", FA_CREATE_NEW | FA_WRITE);
+    res = f_open(&fsrc, LOGFILENAME, FA_CREATE_NEW | FA_WRITE);
 
     if (res == FR_OK)
     {
@@ -72,7 +72,7 @@ void Init_Logging(void)
     else if (res == FR_EXIST)
     {
         printf("WattLog.csv exists\r\n");
-        res = f_open(&fsrc, "0:/WattLog.csv", FA_OPEN_EXISTING | FA_WRITE | FA_READ);
+        res = f_open(&fsrc, LOGFILENAME, FA_OPEN_EXISTING | FA_WRITE | FA_READ);
         if (FR_OK != res)
         {
             PrintFileError(res, "opening log file");

@@ -36,6 +36,7 @@
 #include "usb_istr.h"
 #include "usb_lib.h"
 #include "usb_pwr.h"
+#include "ff.h"
 
 
 /* Private define ------------------------------------------------------------*/
@@ -205,10 +206,16 @@ void vIwdgTask(void *pvArg)
     }
 }
 
+#define BUFSIZE 512
+
 void vUartTask(void *pvArg)
 {
-    static char buf[24];
-
+    static char buf[BUFSIZE];
+    static FIL logfile;
+    static FRESULT res;
+    
+    unsigned int bytes_read = 0;
+    
     while (1)
     {
         while (USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET) vTaskDelay(100);
@@ -221,6 +228,32 @@ void vUartTask(void *pvArg)
             {
                 putf_serial(NULL, buf[i]);
             }
+        }
+        else if ('L' == command)
+        {
+            res = f_open(&logfile, LOGFILENAME, FA_OPEN_EXISTING | FA_READ);
+            if (FR_OK != res)
+            {
+                PrintFileError(res, "open log for total read");
+            }
+
+            while (!f_eof(&logfile))
+            {
+                res = f_read(&logfile, buf, BUFSIZE, &bytes_read);
+                if (FR_OK != res)
+                {
+                    PrintFileError(res, "during total read");
+                    goto bye;
+                }
+                
+                for (int i=0; i < bytes_read; i++)
+                {
+                    putf_serial(NULL, buf[i]);
+                }
+            }
+            
+            bye:
+            f_close(&logfile);
         }
         
         vTaskDelay(100);
