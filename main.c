@@ -189,10 +189,6 @@ void vLoggerTask(void * pvArg)
                 if (0 == solarLogger.currentBinNo)
                 {
                     clearGraph();
-                    sprintf(buf, "Day %d", (int)(RTC_GetCounter() / ONE_DAY));
-                    UG_SetForecolor(C_WHITE);
-                    UG_PutString(MAX_X/2 - 2 * 9, 0, buf);
-                    UG_FillFrame(0, IMPS_Y, MAX_X, MAX_Y, C_BLACK);
                 }
             }
         }
