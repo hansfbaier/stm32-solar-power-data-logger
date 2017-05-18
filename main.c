@@ -253,6 +253,10 @@ void vUartTask(void *pvArg)
             }
             
             bye:
+            putf_serial(NULL, 'E');
+            putf_serial(NULL, 'N');
+            putf_serial(NULL, 'D');
+            putf_serial(NULL, '\n');
             f_close(&logfile);
         }
         
