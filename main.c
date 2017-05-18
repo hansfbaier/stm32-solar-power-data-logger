@@ -235,6 +235,7 @@ void vUartTask(void *pvArg)
             if (FR_OK != res)
             {
                 PrintFileError(res, "open log for total read");
+                goto bye;
             }
 
             while (!f_eof(&logfile))
