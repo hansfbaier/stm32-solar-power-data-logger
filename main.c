@@ -260,6 +260,10 @@ void vUartTask(void *pvArg)
             putf_serial(NULL, '\n');
             f_close(&logfile);
         }
+        else if ('R' == command)
+        {
+            NVIC_SystemReset();
+        }
         
         vTaskDelay(100);
     }
@@ -398,11 +402,13 @@ void TIM2_IRQHandler(void)
 void USB_LP_CAN1_RX0_IRQHandler(void)
 {
   USB_Istr();
+  IWDG_ReloadCounter();
 }
 
 void USB_HP_CAN1_TX_IRQHandler(void)
 {
   CTR_HP();
+  IWDG_ReloadCounter();
 }
 
 void __attribute((__naked__)) HardFault_Handler( void )
