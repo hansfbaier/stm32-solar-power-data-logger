@@ -490,6 +490,7 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
     char buf[32];
     UG_ConsolePutString("HardFault\n");
     sprintf(buf, "pc: %x sp: %x lr: %x\n", pc, sp, lr);
+    sprintf(buf, "r0: %x r1: %x r2: %x r3: %x\n", r0, r1, r2, r3);
     UG_ConsolePutString(buf);
     
     __asm("BKPT #0\n") ; // Break into the debugger
