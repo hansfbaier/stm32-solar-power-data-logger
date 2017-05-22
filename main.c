@@ -411,6 +411,20 @@ void USB_HP_CAN1_TX_IRQHandler(void)
   IWDG_ReloadCounter();
 }
 
+static char *whichFault = "HardFault\n";
+
+void __attribute((__naked__))  BusFault_Handler(void)
+{
+    whichFault = "BusFault\n";
+    __asm volatile  ( " b HardFault_Handler\n" );
+}
+
+void __attribute((__naked__))  UsageFault_Handler(void)
+{
+    whichFault = "UsageFault\n";
+    __asm volatile  ( " b HardFault_Handler\n" );
+}
+
 void __attribute((__naked__)) HardFault_Handler( void )
 {
     __asm volatile
@@ -488,7 +502,7 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
     UG_ConsoleSetForecolor(C_RED);
     register int sp asm ("sp");
     char buf[32];
-    UG_ConsolePutString("HardFault\n");
+    UG_ConsolePutString(whichFault);
     sprintf(buf, "pc: %x sp: %x lr: %x\n", pc, sp, lr);
     sprintf(buf, "r0: %x r1: %x r2: %x r3: %x\n", r0, r1, r2, r3);
     UG_ConsolePutString(buf);
