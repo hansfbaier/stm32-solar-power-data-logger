@@ -208,9 +208,10 @@ void vIwdgTask(void *pvArg)
 
 #define BUFSIZE 512
 
+static char buf[BUFSIZE];
+
 void vUartTask(void *pvArg)
 {
-    static char buf[BUFSIZE];
     static FIL logfile;
     static FRESULT res;
     
@@ -501,11 +502,11 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
     GPIO_SetBits(GPIOB, GPIO_Pin_1);
     UG_ConsoleSetForecolor(C_RED);
     register int sp asm ("sp");
-    char buf[32];
-    UG_ConsolePutString(whichFault);
-    sprintf(buf, "pc: %x sp: %x lr: %x\n", pc, sp, lr);
-    sprintf(buf, "r0: %x r1: %x r2: %x r3: %x\n", r0, r1, r2, r3);
-    UG_ConsolePutString(buf);
+    UG_PutString(0, HARDFAULT_Y, whichFault);
+    sprintf(buf, "pc: %x sp: %x lr: %x", pc, sp, lr);
+    UG_PutString(0, HARDFAULT_Y + 9, buf);
+    sprintf(buf, "r0: %x r1: %x r2: %x r3: %x", r0, r1, r2, r3);
+    UG_PutString(0, HARDFAULT_Y + 18, buf);
     
     __asm("BKPT #0\n") ; // Break into the debugger
 
