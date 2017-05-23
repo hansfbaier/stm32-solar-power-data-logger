@@ -403,13 +403,11 @@ void TIM2_IRQHandler(void)
 void USB_LP_CAN1_RX0_IRQHandler(void)
 {
   USB_Istr();
-  IWDG_ReloadCounter();
 }
 
 void USB_HP_CAN1_TX_IRQHandler(void)
 {
   CTR_HP();
-  IWDG_ReloadCounter();
 }
 
 static char *whichFault = "HardFault\n";
