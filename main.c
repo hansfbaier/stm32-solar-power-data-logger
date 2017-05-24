@@ -498,13 +498,15 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
     _BFAR = (*((volatile unsigned long *)(0xE000ED38))) ;
     
     GPIO_SetBits(GPIOB, GPIO_Pin_1);
-    UG_ConsoleSetForecolor(C_RED);
+    UG_SetForecolor(C_RED);
     register int sp asm ("sp");
     UG_PutString(0, HARDFAULT_Y, whichFault);
     sprintf(buf, "pc: %x sp: %x lr: %x", pc, sp, lr);
     UG_PutString(0, HARDFAULT_Y + 9, buf);
-    sprintf(buf, "r0: %x r1: %x r2: %x r3: %x", r0, r1, r2, r3);
+    sprintf(buf, "r0: %x r1: %x r2: %x", r0, r1, r2);
     UG_PutString(0, HARDFAULT_Y + 18, buf);
+    sprintf(buf, "r3: %x forced: %d", r3, forced);
+    UG_PutString(0, HARDFAULT_Y + 27, buf);
     
     __asm("BKPT #0\n") ; // Break into the debugger
 
