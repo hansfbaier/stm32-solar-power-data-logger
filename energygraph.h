@@ -20,7 +20,7 @@
 #define MAX_CONSOLE_X (MAX_X - 112)
 #define SOLAR_X       (MAX_CONSOLE_X + 56)
 #define HOUSE_X       (MAX_CONSOLE_X)
-#define HARDFAULT_Y (MAX_Y/2)
+#define HARDFAULT_Y (MAX_Y/3)
 
 #define MAX_BIN_Y MAX_Y/8
 #define MAX_BIN_X NUM_BINS

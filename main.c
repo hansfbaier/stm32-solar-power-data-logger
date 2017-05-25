@@ -455,7 +455,9 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
     volatile uint32_t lr; /* Link register. */
     volatile uint32_t pc; /* Program counter. */
     volatile uint32_t psr;/* Program status register. */
-    volatile unsigned long _CFSR ;
+    volatile uint32_t _CFSR ;
+    volatile uint8_t  _BFSR ;
+    volatile uint16_t _UFSR ;
     volatile unsigned long _HFSR ;
     volatile unsigned long _DFSR ;
     volatile unsigned long _AFSR ;
@@ -477,7 +479,9 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
 
     // Configurable Fault Status Register
     // Consists of MMSR, BFSR and UFSR
-    _CFSR = (*((volatile unsigned long *)(0xE000ED28))) ;
+    _CFSR = (*((uint32_t *)(0xE000ED28))) ;
+    _BFSR = (_CFSR>>8) & 0xFF;
+    _UFSR = (_CFSR>>16) & 0xFF;
 
     // Hard Fault Status Register
     _HFSR = (*((volatile unsigned long *)(0xE000ED2C))) ;
@@ -505,8 +509,15 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
     UG_PutString(0, HARDFAULT_Y + 9, buf);
     sprintf(buf, "r0: %x r1: %x r2: %x", r0, r1, r2);
     UG_PutString(0, HARDFAULT_Y + 18, buf);
-    sprintf(buf, "r3: %x forced: %d", r3, forced);
+    sprintf(buf, "r3: %x frc: %d prc: %d, imprc: %d", r3, forced, (_BFSR>>1) & 0x1, (_BFSR>>2) & 0x1);
     UG_PutString(0, HARDFAULT_Y + 27, buf);
+    sprintf(buf, "UFSR: %4x BFSR: %2x MMSR: %2x", _UFSR, _BFSR, _CFSR & 0xFF);
+    UG_PutString(0, HARDFAULT_Y + 36, buf);
+    if ((_BFSR>>7) & 0x1)
+    {
+      sprintf(buf, "BFAR: %8x", _BFAR);
+      UG_PutString(0, HARDFAULT_Y + 45, buf);
+    }
     
     __asm("BKPT #0\n") ; // Break into the debugger
 
