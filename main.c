@@ -460,7 +460,6 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
     volatile uint16_t _UFSR ;
     volatile unsigned long _HFSR ;
     volatile unsigned long _DFSR ;
-    volatile unsigned long _AFSR ;
     volatile unsigned long _BFAR ;
     volatile unsigned long _MMAR ;
     volatile char forced;
@@ -491,9 +490,6 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
     // Debug Fault Status Register
     _DFSR = (*((volatile unsigned long *)(0xE000ED30))) ;
 
-    // Auxiliary Fault Status Register
-    _AFSR = (*((volatile unsigned long *)(0xE000ED3C))) ;
-
     // Read the Fault Address Registers. These may not contain valid values.
     // Check BFARVALID/MMARVALID to see if they are valid values
     // MemManage Fault Address Register
@@ -513,10 +509,12 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
     UG_PutString(0, HARDFAULT_Y + 27, buf);
     sprintf(buf, "UFSR: %4x BFSR: %2x MMSR: %2x", _UFSR, _BFSR, _CFSR & 0xFF);
     UG_PutString(0, HARDFAULT_Y + 36, buf);
+    sprintf(buf, "DFSR: %6x ", _DFSR & 0xfff);
+    UG_PutString(0, HARDFAULT_Y + 45, buf);
     if ((_BFSR>>7) & 0x1)
     {
       sprintf(buf, "BFAR: %8x", _BFAR);
-      UG_PutString(0, HARDFAULT_Y + 45, buf);
+      UG_PutString(0, HARDFAULT_Y + 54, buf);
     }
     
     __asm("BKPT #0\n") ; // Break into the debugger
