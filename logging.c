@@ -6,6 +6,7 @@
  */
 
 #include "logging.h"
+#include "energygraph.h"
 #include "sdio_sd.h"
 #include "ff.h"
 #include "printf.h"
@@ -25,7 +26,7 @@ static FIL fsrc;         /* file objects */
 static FRESULT res;
 static UINT br;
 
-void PrintFileError(FRESULT res, char message[])
+void PrintFileError(FRESULT res, const char message[])
 {
     char buf[48];
     UG_ConsoleSetForecolor(C_RED);
@@ -233,7 +234,7 @@ void Restore_Today(void)
         seek_until(',');
         int solarImps = read_number_until(',');
         int houseImps = read_number_until('\n');
-        int day = read_number_until(',');
+        day = read_number_until(',');
         solarLogger.currentBinNo = bin;
         solarLogger.bins[bin] = solarImps;
         solarLogger.impsToday += solarImps;

@@ -40,6 +40,8 @@
 #include "ff.h"
 
 
+void PrintFileError(FRESULT res, const char message[]);
+
 /* Private define ------------------------------------------------------------*/
 #define LOGGER_TASK_STACK_SIZE		( 150 )
 #define IWDG_TASK_STACK_SIZE       ( configMINIMAL_STACK_SIZE )
