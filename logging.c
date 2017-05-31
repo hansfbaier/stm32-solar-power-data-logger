@@ -252,8 +252,6 @@ void Restore_Today(void)
     }
 }
 
-
-
 FRESULT scan_files (char* dirpath)
 {
     FILINFO fno;

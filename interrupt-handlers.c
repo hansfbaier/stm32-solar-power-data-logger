@@ -34,6 +34,13 @@ void RTC_IRQHandler(void)
     portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 }
 
+static volatile unsigned long timer_value;
+
+static unsigned long get_timer()
+{
+    return timer_value + TIM_GetCounter(TIM2);
+}
+
 void EXTI0_IRQHandler(void)
 {    
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
@@ -43,7 +50,7 @@ void EXTI0_IRQHandler(void)
         EXTI_ClearITPendingBit(EXTI_Line0);
         EnergyLogger *solarLoggerPtr = &solarLogger;
         solarLogger.lastImpTimer = solarLogger.impTimer;
-        solarLogger.impTimer = TIM_GetCounter(TIM2);
+        solarLogger.impTimer = get_timer();
         if (impQueue) { xQueueSendFromISR(impQueue, &solarLoggerPtr, &xHigherPriorityTaskWoken); }
     }
     
@@ -57,12 +64,8 @@ void EXTI1_IRQHandler(void)
     if (EXTI_GetITStatus(EXTI_Line1) != RESET)
     {
         EXTI_ClearITPendingBit(EXTI_Line1);
-        int impTimer = TIM_GetCounter(TIM2);
+        unsigned long impTimer = get_timer();
       
-        if (impTimer < houseLogger.impTimer)
-        {
-            houseLogger.impTimer -= 64000;
-        }
         // debounce broken house meter output
         if (impTimer - houseLogger.impTimer > 200)
         {
@@ -80,6 +83,7 @@ void TIM2_IRQHandler(void)
 {
     if ( TIM_GetITStatus(TIM2 , TIM_IT_Update) != RESET ) 
     {
+       timer_value += 64000;
        TIM_ClearITPendingBit(TIM2 , TIM_FLAG_Update);
     }   
 }
