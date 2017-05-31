@@ -97,7 +97,7 @@ void vLoggerTask(void * pvArg)
     clearGraph();
     static char buf[16];
     
-    //Init_Logging();
+    Init_Logging();
     
     impQueue  = xQueueCreate(10, sizeof(EnergyLogger *));
     slotQueue = xQueueCreate(10, sizeof(int));

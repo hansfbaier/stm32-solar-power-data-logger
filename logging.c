@@ -48,9 +48,9 @@ void Init_Logging(void)
     }
     else
     {
-        printf("-- Please connect a SD card \r\n");
+        printf("-- Please insert a SD card \r\n");
         while (SD_Detect() != SD_PRESENT);
-        printf("-- SD card connected\r\n");
+        printf("-- SD card found\r\n");
     }
 
     f_mount(0, &fs);
@@ -89,7 +89,6 @@ void Init_Logging(void)
         }        
     }
 
-    //scan_files(path);
     SD_TotalSize();
 }
 
