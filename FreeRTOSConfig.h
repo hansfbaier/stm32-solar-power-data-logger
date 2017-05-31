@@ -104,8 +104,8 @@ to exclude the API function. */
 
 /* This is the raw value as per the Cortex-M3 NVIC.  Values can be 255
 (lowest) to 0 (1?) (highest). */
-#define configKERNEL_INTERRUPT_PRIORITY 		0xff
-#define configMAX_SYSCALL_INTERRUPT_PRIORITY 	        0x2f
+#define configKERNEL_INTERRUPT_PRIORITY         0xff
+#define configMAX_SYSCALL_INTERRUPT_PRIORITY    0x2f
 
 /* FreeRTOS exception handlers port */
 #define vPortSVCHandler SVC_Handler
