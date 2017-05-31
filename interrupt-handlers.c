@@ -13,7 +13,6 @@
 #include "usb_istr.h"
 #include "usb_lib.h"
 #include "usb_pwr.h"
-#include "ff.h"
 
 extern xQueueHandle impQueue;
 extern xQueueHandle slotQueue;
@@ -97,7 +96,7 @@ void USB_HP_CAN1_TX_IRQHandler(void)
   CTR_HP();
 }
 
-static char *whichFault = "HardFault\n";
+static const char *whichFault = "HardFault\n";
 
 void __attribute((__naked__))  BusFault_Handler(void)
 {
