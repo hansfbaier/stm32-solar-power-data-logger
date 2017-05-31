@@ -14,7 +14,6 @@
 *******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
-#include "hw_config.h"
 #include "usb_scsi.h"
 #include "mass_mal.h"
 #include "usb_bot.h"
@@ -23,6 +22,7 @@
 #include "nand_if.h"
 #include "platform_config.h"
 #include "usb_lib.h"
+#include "USB/inc/usb_config.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

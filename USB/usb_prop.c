@@ -18,10 +18,10 @@
 #include "usb_desc.h"
 #include "usb_pwr.h"
 #include "usb_bot.h"
-#include "hw_config.h"
 #include "memory.h"
 #include "mass_mal.h"
 #include "usb_prop.h"
+#include "USB/inc/usb_config.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

@@ -23,6 +23,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include "stm32f10x.h"
+#include "stm32f10x_conf.h"
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
@@ -33,11 +34,11 @@
 #include "printf.h"
 #include "rtc.h"
 #include "hardware-config.h"
-#include "hw_config.h"
 #include "usb_istr.h"
 #include "usb_lib.h"
 #include "usb_pwr.h"
 #include "ff.h"
+#include "USB/inc/usb_config.h"
 
 
 void PrintFileError(FRESULT res, const char message[]);
@@ -89,6 +90,7 @@ extern EnergyLogger houseLogger;
 
 void vLoggerTask(void * pvArg)
 {   
+    (void)pvArg;
     EnergyLogger *logger;
     int seconds;
 
@@ -198,6 +200,7 @@ void vLoggerTask(void * pvArg)
 
 void vIwdgTask(void *pvArg)
 {
+    (void)pvArg;
     while (1)
     {
         IWDG_ReloadCounter();
@@ -211,6 +214,7 @@ char buf[BUFSIZE];
 
 void vUartTask(void *pvArg)
 {
+    (void)pvArg;
     static FIL logfile;
     static FRESULT res;
     
@@ -247,7 +251,7 @@ void vUartTask(void *pvArg)
                     goto bye;
                 }
                 
-                for (int i=0; i < bytes_read; i++)
+                for (unsigned int i=0; i < bytes_read; i++)
                 {
                     putf_serial(NULL, buf[i]);
                 }
@@ -322,11 +326,13 @@ void putchar(char ch)
 
 static void putf_serial(void *dummy, char ch)
 {
+    (void)dummy;
     putchar(ch);
 }
 
 static void putf_gui(void *dummy, char ch)
 {
+    (void)dummy;
     char buffer[2];
     buffer[0] = ch;
     buffer[1] = 0;

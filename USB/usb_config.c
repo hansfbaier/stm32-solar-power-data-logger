@@ -14,13 +14,13 @@
 *******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
-#include "hw_config.h"
 #include "sdio_sd.h"
 #include "platform_config.h"
 #include "mass_mal.h"
 #include "usb_desc.h"
 #include "usb_pwr.h"
 #include "usb_lib.h"
+#include "USB/inc/usb_config.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -62,7 +62,7 @@ void Set_System(void)
 void Set_USBClock(void)
 {
   /* USBCLK = PLLCLK */
-  RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);	 /* USB时钟为PLL时钟除以1.5	为48MHz	*/
+  RCC_USBCLKConfig(RCC_USBCLKSource_PLLCLK_1Div5);	 /* USB时锟斤拷为PLL时锟接筹拷锟斤拷1.5	为48MHz	*/
 
   /* Enable USB clock */
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_USB, ENABLE);

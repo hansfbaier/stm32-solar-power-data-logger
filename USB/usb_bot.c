@@ -15,13 +15,13 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usb_scsi.h"
-#include "hw_config.h"
 #include "usb_regs.h"
 #include "usb_mem.h"
 #include "usb_conf.h"
 #include "usb_bot.h"
 #include "memory.h"
 #include "usb_lib.h"
+#include "USB/inc/usb_config.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

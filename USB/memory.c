@@ -21,9 +21,9 @@
 #include "usb_regs.h"
 #include "usb_mem.h"
 #include "usb_conf.h"
-#include "hw_config.h"
 #include "mass_mal.h"
 #include "usb_lib.h"
+#include "USB/inc/usb_config.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
