@@ -26,11 +26,11 @@ static FIL fsrc;         /* file objects */
 static FRESULT res;
 static UINT br;
 
-void PrintFileError(FRESULT res, const char message[])
+void PrintFileError(FRESULT result, const char message[])
 {
     char buf[48];
     UG_ConsoleSetForecolor(C_RED);
-    sprintf(buf, "error '%d' %s\r\n", res, message);
+    sprintf(buf, "error '%d' %s\r\n", result, message);
     UG_ConsolePutString(buf);
     UG_ConsoleSetForecolor(C_GREEN);
 }
@@ -288,17 +288,17 @@ FRESULT scan_files (char* path)
 
 int SD_TotalSize(void)
 {
-    FATFS *fs;
+    FATFS *fatfs;
     DWORD fre_clust;        
 
-    res = f_getfree("0:", &fre_clust, &fs); 
+    res = f_getfree("0:", &fre_clust, &fatfs); 
     if ( res==FR_OK ) 
     {
       char buf[32];
       sprintf(buf,
               "%d MB of %d MB.",
-              (fre_clust * fs->csize) / 2 / 1024,
-              ((fs->n_fatent - 2) * fs->csize ) / 2 / 1024);
+              (fre_clust * fatfs->csize) / 2 / 1024,
+              ((fatfs->n_fatent - 2) * fatfs->csize ) / 2 / 1024);
         
       UG_SetForecolor(C_WHITE);
       UG_PutString(0, 0, buf);
