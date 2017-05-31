@@ -267,6 +267,13 @@ void vUartTask(void *pvArg)
         {
             NVIC_SystemReset();
         }
+        else if ('C' == command)
+        {
+            init_printf(NULL, putf_serial);
+            Time_Adjust();
+            init_printf(NULL, putf_gui);
+            setCurrentBinFromRtc();
+        }
         
         vTaskDelay(100);
     }

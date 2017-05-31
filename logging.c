@@ -35,12 +35,17 @@ void PrintFileError(FRESULT result, const char message[])
     UG_ConsoleSetForecolor(C_GREEN);
 }
 
-void Init_Logging(void)
+void setCurrentBinFromRtc(void)
 {
     uint32_t rtc = RTC_GetCounter();
     int slot = (rtc % ONE_DAY) / (5 * 60);
     solarLogger.currentBinNo = slot;
-    houseLogger.currentBinNo = slot;
+    houseLogger.currentBinNo = slot;    
+}
+
+void Init_Logging(void)
+{   
+    setCurrentBinFromRtc();
     
     if (SD_Detect() == SD_PRESENT)
     {

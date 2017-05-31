@@ -31,5 +31,7 @@ int  getBin(EnergyLogger *logger, int binNo);
 int  getCurrentBin(EnergyLogger *logger);
 int  getLastBinNo(EnergyLogger *logger);
 int  getLastBin(EnergyLogger *logger);
+void setCurrentBinFromRtc(void);
+
 
 #endif /* LOGGING_H_ */
