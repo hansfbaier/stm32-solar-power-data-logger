@@ -33,6 +33,7 @@
 #include "printf.h"
 #include "rtc.h"
 #include "hardware-config.h"
+#include "hw_config.h"
 #include "usb_istr.h"
 #include "usb_lib.h"
 #include "usb_pwr.h"
@@ -324,12 +325,11 @@ static void putf_serial(void *dummy, char ch)
 
 static void putf_gui(void *dummy, char ch)
 {
-    char buf[2];
-    buf[0] = ch;
-    buf[1] = 0;
-    UG_ConsolePutString(buf);
+    char buffer[2];
+    buffer[0] = ch;
+    buffer[1] = 0;
+    UG_ConsolePutString(buffer);
 }
-
 
 #ifdef  USE_FULL_ASSERT
 
