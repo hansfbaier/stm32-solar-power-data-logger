@@ -12,7 +12,7 @@
 #include "printf.h"
 #include "ugui.h"
 
-FRESULT scan_files (char* path);
+FRESULT scan_files (char* dirpath);
 int SD_TotalSize(void);
 void Restore_Today(void);
 
@@ -255,7 +255,7 @@ void Restore_Today(void)
 
 
 
-FRESULT scan_files (char* path)
+FRESULT scan_files (char* dirpath)
 {
     FILINFO fno;
     DIR dir;
@@ -267,9 +267,9 @@ FRESULT scan_files (char* path)
     fno.lfsize = sizeof(lfn);
 #endif
 
-    res = f_opendir(&dir, path);
+    res = f_opendir(&dir, dirpath);
     if (res == FR_OK) {
-        i = strlen(path);
+        i = strlen(dirpath);
         for (;;) {
             res = f_readdir(&dir, &fno);
             if (res != FR_OK || fno.fname[0] == 0) break;
@@ -279,7 +279,7 @@ FRESULT scan_files (char* path)
 #else
             fn = fno.fname;
 #endif
-            printf("%s/%s \r\n", path, fn);
+            printf("%s/%s \r\n", dirpath, fn);
         }
     }
 
