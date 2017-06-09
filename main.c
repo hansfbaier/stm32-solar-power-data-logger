@@ -23,6 +23,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <stdint.h>
 #include "stm32f10x.h"
+#include "stm32f10x_conf.h"
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
@@ -37,7 +38,10 @@
 #include "usb_lib.h"
 #include "usb_pwr.h"
 #include "ff.h"
+#include "USB/inc/usb_config.h"
 
+
+void PrintFileError(FRESULT res, const char message[]);
 
 /* Private define ------------------------------------------------------------*/
 #define LOGGER_TASK_STACK_SIZE		( 150 )
@@ -86,6 +90,7 @@ extern EnergyLogger houseLogger;
 
 void vLoggerTask(void * pvArg)
 {   
+    (void)pvArg;
     EnergyLogger *logger;
     int seconds;
 
@@ -118,9 +123,6 @@ void vLoggerTask(void * pvArg)
             
 #ifdef DISPLAY_WATTS
             char watts[10];
-            if (logger->impTimer < logger->lastImpTimer) {
-                logger->impTimer += 64000;
-            }
             int millisSinceLastImp = (logger->impTimer - logger->lastImpTimer) / 2;
             int wattsUsed = 2250000 / millisSinceLastImp;
             sprintf(watts, "%4dW", wattsUsed);
@@ -198,20 +200,20 @@ void vLoggerTask(void * pvArg)
 
 void vIwdgTask(void *pvArg)
 {
+    (void)pvArg;
     while (1)
     {
         IWDG_ReloadCounter();
-        printf("W");
         vTaskDelay(2000);
     }
 }
 
 #define BUFSIZE 512
-
-static char buf[BUFSIZE];
+char buf[BUFSIZE];
 
 void vUartTask(void *pvArg)
 {
+    (void)pvArg;
     static FIL logfile;
     static FRESULT res;
     
@@ -248,7 +250,7 @@ void vUartTask(void *pvArg)
                     goto bye;
                 }
                 
-                for (int i=0; i < bytes_read; i++)
+                for (unsigned int i=0; i < bytes_read; i++)
                 {
                     putf_serial(NULL, buf[i]);
                 }
@@ -264,6 +266,13 @@ void vUartTask(void *pvArg)
         else if ('R' == command)
         {
             NVIC_SystemReset();
+        }
+        else if ('C' == command)
+        {
+            init_printf(NULL, putf_serial);
+            Time_Adjust();
+            init_printf(NULL, putf_gui);
+            setCurrentBinFromRtc();
         }
         
         vTaskDelay(100);
@@ -323,206 +332,17 @@ void putchar(char ch)
 
 static void putf_serial(void *dummy, char ch)
 {
+    (void)dummy;
     putchar(ch);
 }
 
 static void putf_gui(void *dummy, char ch)
 {
-    char buf[2];
-    buf[0] = ch;
-    buf[1] = 0;
-    UG_ConsolePutString(buf);
-}
-
-#define FIVE_MINUTES (60 * 5)
-void RTC_IRQHandler(void)
-{
-    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-    
-    RTC_ClearITPendingBit(RTC_IT_SEC);
-    static int seconds;
-    
-    seconds = RTC_GetCounter() % FIVE_MINUTES;
-    if (slotQueue) { xQueueSendFromISR(slotQueue, &seconds, &xHigherPriorityTaskWoken); }
-    
-    portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
-}
-
-void EXTI0_IRQHandler(void)
-{    
-    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-    
-    if (EXTI_GetITStatus(EXTI_Line0) != RESET)
-    {
-        EXTI_ClearITPendingBit(EXTI_Line0);
-        EnergyLogger *solarLoggerPtr = &solarLogger;
-        solarLogger.lastImpTimer = solarLogger.impTimer;
-        solarLogger.impTimer = TIM_GetCounter(TIM2);
-        if (impQueue) { xQueueSendFromISR(impQueue, &solarLoggerPtr, &xHigherPriorityTaskWoken); }
-    }
-    
-    portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
-}
-
-void EXTI1_IRQHandler(void)
-{    
-    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-
-    if (EXTI_GetITStatus(EXTI_Line1) != RESET)
-    {
-        EXTI_ClearITPendingBit(EXTI_Line1);
-        int impTimer = TIM_GetCounter(TIM2);
-      
-        UG_ConsolePutString(".");
-        if (impTimer < houseLogger.impTimer)
-        {
-            houseLogger.impTimer -= 64000;
-        }
-        // debounce broken house meter output
-        if (impTimer - houseLogger.impTimer > 200)
-        {
-            UG_ConsolePutString("X");
-            EnergyLogger *houseLoggerPtr = &houseLogger;
-            houseLogger.lastImpTimer = houseLogger.impTimer;
-            houseLogger.impTimer = impTimer;
-            if (impQueue) { xQueueSendFromISR(impQueue, &houseLoggerPtr, &xHigherPriorityTaskWoken); }
-        }
-    }
-    
-    portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
-}
-
-void TIM2_IRQHandler(void)
-{
-    if ( TIM_GetITStatus(TIM2 , TIM_IT_Update) != RESET ) 
-    {
-       TIM_ClearITPendingBit(TIM2 , TIM_FLAG_Update);
-    }   
-}
-
-void USB_LP_CAN1_RX0_IRQHandler(void)
-{
-  USB_Istr();
-}
-
-void USB_HP_CAN1_TX_IRQHandler(void)
-{
-  CTR_HP();
-}
-
-static char *whichFault = "HardFault\n";
-
-void __attribute((__naked__))  BusFault_Handler(void)
-{
-    whichFault = "BusFault\n";
-    __asm volatile  ( " b HardFault_Handler\n" );
-}
-
-void __attribute((__naked__))  UsageFault_Handler(void)
-{
-    whichFault = "UsageFault\n";
-    __asm volatile  ( " b HardFault_Handler\n" );
-}
-
-void __attribute((__naked__)) HardFault_Handler( void )
-{
-    __asm volatile
-    (
-        " tst lr, #4                                                \n"
-        " ite eq                                                    \n"
-        " mrseq r0, msp                                             \n"
-        " mrsne r0, psp                                             \n"
-        " ldr r1, [r0, #24]                                         \n"
-        " ldr r2, handler2_address_const                            \n"
-        " bx r2                                                     \n"
-        " handler2_address_const: .word prvGetRegistersFromStack    \n"
-    );
-}
-
-void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
-{
-    /* These are volatile to try and prevent the compiler/linker optimising them
-    away as the variables never actually get used.  If the debugger won't show the
-    values of the variables, make them global my moving their declaration outside
-    of this function. */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-    volatile uint32_t r0;
-    volatile uint32_t r1;
-    volatile uint32_t r2;
-    volatile uint32_t r3;
-    volatile uint32_t r12;
-    volatile uint32_t lr; /* Link register. */
-    volatile uint32_t pc; /* Program counter. */
-    volatile uint32_t psr;/* Program status register. */
-    volatile uint32_t _CFSR ;
-    volatile uint8_t  _BFSR ;
-    volatile uint16_t _UFSR ;
-    volatile unsigned long _HFSR ;
-    volatile unsigned long _DFSR ;
-    volatile unsigned long _BFAR ;
-    volatile unsigned long _MMAR ;
-    volatile char forced;
-    volatile char vectTbl;
-#pragma GCC diagnostic pop
-
-    r0 = pulFaultStackAddress[ 0 ];
-    r1 = pulFaultStackAddress[ 1 ];
-    r2 = pulFaultStackAddress[ 2 ];
-    r3 = pulFaultStackAddress[ 3 ];
-
-    r12 = pulFaultStackAddress[ 4 ];
-    lr = pulFaultStackAddress[ 5 ];
-    pc = pulFaultStackAddress[ 6 ];
-    psr = pulFaultStackAddress[ 7 ];
-
-    // Configurable Fault Status Register
-    // Consists of MMSR, BFSR and UFSR
-    _CFSR = (*((uint32_t *)(0xE000ED28))) ;
-    _BFSR = (_CFSR>>8) & 0xFF;
-    _UFSR = (_CFSR>>16) & 0xFF;
-
-    // Hard Fault Status Register
-    _HFSR = (*((volatile unsigned long *)(0xE000ED2C))) ;
-    forced = (_HFSR & (1 << 30)) > 0;
-    vectTbl = (_HFSR & (1 << 1)) > 0;
-
-    // Debug Fault Status Register
-    _DFSR = (*((volatile unsigned long *)(0xE000ED30))) ;
-
-    // Read the Fault Address Registers. These may not contain valid values.
-    // Check BFARVALID/MMARVALID to see if they are valid values
-    // MemManage Fault Address Register
-    _MMAR = (*((volatile unsigned long *)(0xE000ED34))) ;
-    // Bus Fault Address Register
-    _BFAR = (*((volatile unsigned long *)(0xE000ED38))) ;
-    
-    GPIO_SetBits(GPIOB, GPIO_Pin_1);
-    UG_SetForecolor(C_RED);
-    register int sp asm ("sp");
-    UG_PutString(0, HARDFAULT_Y, whichFault);
-    sprintf(buf, "pc: %x sp: %x lr: %x", pc, sp, lr);
-    UG_PutString(0, HARDFAULT_Y + 9, buf);
-    sprintf(buf, "r0: %x r1: %x r2: %x", r0, r1, r2);
-    UG_PutString(0, HARDFAULT_Y + 18, buf);
-    sprintf(buf, "r3: %x frc: %d prc: %d, imprc: %d", r3, forced, (_BFSR>>1) & 0x1, (_BFSR>>2) & 0x1);
-    UG_PutString(0, HARDFAULT_Y + 27, buf);
-    sprintf(buf, "UFSR: %4x BFSR: %2x MMSR: %2x", _UFSR, _BFSR, _CFSR & 0xFF);
-    UG_PutString(0, HARDFAULT_Y + 36, buf);
-    sprintf(buf, "DFSR: %6x ", _DFSR & 0xfff);
-    UG_PutString(0, HARDFAULT_Y + 45, buf);
-    if ((_BFSR>>7) & 0x1)
-    {
-      sprintf(buf, "BFAR: %8x", _BFAR);
-      UG_PutString(0, HARDFAULT_Y + 54, buf);
-    }
-    
-    __asm("BKPT #0\n") ; // Break into the debugger
-
-    /* When the following line is hit, the variables contain the register values. */
-    for( ;; )
-    {              
-    }
+    (void)dummy;
+    char buffer[2];
+    buffer[0] = ch;
+    buffer[1] = 0;
+    UG_ConsolePutString(buffer);
 }
 
 #ifdef  USE_FULL_ASSERT

@@ -6,12 +6,13 @@
  */
 
 #include "logging.h"
+#include "energygraph.h"
 #include "sdio_sd.h"
 #include "ff.h"
 #include "printf.h"
 #include "ugui.h"
 
-FRESULT scan_files (char* path);
+FRESULT scan_files (char* dirpath);
 int SD_TotalSize(void);
 void Restore_Today(void);
 
@@ -25,21 +26,26 @@ static FIL fsrc;         /* file objects */
 static FRESULT res;
 static UINT br;
 
-void PrintFileError(FRESULT res, char message[])
+void PrintFileError(FRESULT result, const char message[])
 {
     char buf[48];
     UG_ConsoleSetForecolor(C_RED);
-    sprintf(buf, "error '%d' %s\r\n", res, message);
+    sprintf(buf, "error '%d' %s\r\n", result, message);
     UG_ConsolePutString(buf);
     UG_ConsoleSetForecolor(C_GREEN);
 }
 
-void Init_Logging(void)
+void setCurrentBinFromRtc(void)
 {
     uint32_t rtc = RTC_GetCounter();
     int slot = (rtc % ONE_DAY) / (5 * 60);
     solarLogger.currentBinNo = slot;
-    houseLogger.currentBinNo = slot;
+    houseLogger.currentBinNo = slot;    
+}
+
+void Init_Logging(void)
+{   
+    setCurrentBinFromRtc();
     
     if (SD_Detect() == SD_PRESENT)
     {
@@ -47,9 +53,9 @@ void Init_Logging(void)
     }
     else
     {
-        printf("-- Please connect a SD card \r\n");
+        printf("-- Please insert a SD card \r\n");
         while (SD_Detect() != SD_PRESENT);
-        printf("-- SD card connected\r\n");
+        printf("-- SD card found\r\n");
     }
 
     f_mount(0, &fs);
@@ -88,7 +94,6 @@ void Init_Logging(void)
         }        
     }
 
-    //scan_files(path);
     SD_TotalSize();
 }
 
@@ -233,7 +238,7 @@ void Restore_Today(void)
         seek_until(',');
         int solarImps = read_number_until(',');
         int houseImps = read_number_until('\n');
-        int day = read_number_until(',');
+        day = read_number_until(',');
         solarLogger.currentBinNo = bin;
         solarLogger.bins[bin] = solarImps;
         solarLogger.impsToday += solarImps;
@@ -252,9 +257,7 @@ void Restore_Today(void)
     }
 }
 
-
-
-FRESULT scan_files (char* path)
+FRESULT scan_files (char* dirpath)
 {
     FILINFO fno;
     DIR dir;
@@ -266,9 +269,9 @@ FRESULT scan_files (char* path)
     fno.lfsize = sizeof(lfn);
 #endif
 
-    res = f_opendir(&dir, path);
+    res = f_opendir(&dir, dirpath);
     if (res == FR_OK) {
-        i = strlen(path);
+        i = strlen(dirpath);
         for (;;) {
             res = f_readdir(&dir, &fno);
             if (res != FR_OK || fno.fname[0] == 0) break;
@@ -278,7 +281,7 @@ FRESULT scan_files (char* path)
 #else
             fn = fno.fname;
 #endif
-            printf("%s/%s \r\n", path, fn);
+            printf("%s/%s \r\n", dirpath, fn);
         }
     }
 
@@ -287,17 +290,17 @@ FRESULT scan_files (char* path)
 
 int SD_TotalSize(void)
 {
-    FATFS *fs;
+    FATFS *fatfs;
     DWORD fre_clust;        
 
-    res = f_getfree("0:", &fre_clust, &fs); 
+    res = f_getfree("0:", &fre_clust, &fatfs); 
     if ( res==FR_OK ) 
     {
       char buf[32];
       sprintf(buf,
               "%d MB of %d MB.",
-              (fre_clust * fs->csize) / 2 / 1024,
-              ((fs->n_fatent - 2) * fs->csize ) / 2 / 1024);
+              (fre_clust * fatfs->csize) / 2 / 1024,
+              ((fatfs->n_fatent - 2) * fatfs->csize ) / 2 / 1024);
         
       UG_SetForecolor(C_WHITE);
       UG_PutString(0, 0, buf);

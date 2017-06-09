@@ -18,7 +18,8 @@
 #include "usb_lib.h"
 #include "usb_conf.h"
 #include "usb_pwr.h"
-#include "hw_config.h"
+
+#include "USB/inc/usb_config.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

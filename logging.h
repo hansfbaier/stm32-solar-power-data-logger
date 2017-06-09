@@ -18,8 +18,8 @@ typedef struct
     int bins[NUM_BINS];
     int impsToday;
     int currentBinNo;
-    int impTimer;
-    int lastImpTimer;
+    unsigned long impTimer;
+    unsigned long lastImpTimer;
 } EnergyLogger;
 
 void Init_Logging(void);
@@ -31,5 +31,7 @@ int  getBin(EnergyLogger *logger, int binNo);
 int  getCurrentBin(EnergyLogger *logger);
 int  getLastBinNo(EnergyLogger *logger);
 int  getLastBin(EnergyLogger *logger);
+void setCurrentBinFromRtc(void);
+
 
 #endif /* LOGGING_H_ */
