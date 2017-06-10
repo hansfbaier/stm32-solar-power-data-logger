@@ -105,22 +105,21 @@ void vModeTask(void *pvArg)
 {
     (void)pvArg;
     
-    vTaskDelay(5000 * portTICK_RATE_MS);
+    vTaskDelay(10000 * portTICK_RATE_MS);
     
     while(1)
     {
         DisplayEvent event;
         
         vTaskDelay(4000 * portTICK_RATE_MS);
-        displayState.mode = ENERGY_GRAPH;
-        
-        event = MODE_CHANGE;
-        xQueueSend(displayQueue, &event, 100 * portTICK_RATE_MS);
-        
-        vTaskDelay(4000 * portTICK_RATE_MS);
         displayState.mode = IMPORT_EXPORT;
         event = MODE_CHANGE;
         xQueueSend(displayQueue, &event, 100 * portTICK_RATE_MS);
+
+        vTaskDelay(10000 * portTICK_RATE_MS);
+        displayState.mode = ENERGY_GRAPH;
+        event = MODE_CHANGE;
+        xQueueSend(displayQueue, &event, 100 * portTICK_RATE_MS);   
     }
 }
 
@@ -164,6 +163,8 @@ void vDisplayTask(void * pvArg)
                 {
                     case ENERGY_GRAPH:
                         redrawGraph();
+			displaySolarImp();
+			displayHouseImp();
                         break;
                         
                     case IMPORT_EXPORT:
