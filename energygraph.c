@@ -133,6 +133,11 @@ void displayExim(void)
     
     if (displayState.import) UG_SetForecolor(C_RED); else UG_SetForecolor(C_GREEN);
     UG_PutString(xspacer * 4, y += yspacer, displayState.eximWatts);
+
+    UG_SetForecolor(HOUSE_COLOR);
+    UG_PutString(xspacer, y += yspacer, displayState.houseWatthours);
+    UG_SetForecolor(SOLAR_COLOR);
+    UG_PutString(MAX_X/2 + xspacer, y, displayState.solarWatthours);
     
     UG_FontSelect(&FONT_6X8);
 }
