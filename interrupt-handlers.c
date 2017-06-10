@@ -18,7 +18,7 @@ extern xQueueHandle impQueue;
 extern xQueueHandle slotQueue;
 extern EnergyLogger solarLogger;
 extern EnergyLogger houseLogger;
-extern char *buf;
+extern char *uart_buf;
 
 #define FIVE_MINUTES (60 * 5)
 void RTC_IRQHandler(void)
@@ -189,12 +189,12 @@ void prvGetRegistersFromStack( uint32_t *pulFaultStackAddress )
     UG_SetForecolor(C_RED);
     register int sp asm ("sp");
     UG_PutString(0, HARDFAULT_Y, whichFault);
-    sprintf(buf, "pc: %x sp: %x lr: %x", pc, sp, lr);
-    UG_PutString(0, HARDFAULT_Y + 9, buf);
-    sprintf(buf, "r0: %x r1: %x r2: %x", r0, r1, r2);
-    UG_PutString(0, HARDFAULT_Y + 18, buf);
-    sprintf(buf, "r3: %x forced: %d", r3, forced);
-    UG_PutString(0, HARDFAULT_Y + 27, buf);
+    sprintf(uart_buf, "pc: %x sp: %x lr: %x", pc, sp, lr);
+    UG_PutString(0, HARDFAULT_Y + 9, uart_buf);
+    sprintf(uart_buf, "r0: %x r1: %x r2: %x", r0, r1, r2);
+    UG_PutString(0, HARDFAULT_Y + 18, uart_buf);
+    sprintf(uart_buf, "r3: %x forced: %d", r3, forced);
+    UG_PutString(0, HARDFAULT_Y + 27, uart_buf);
     
     __asm("BKPT #0\n") ; // Break into the debugger
 
