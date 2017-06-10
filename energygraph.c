@@ -129,15 +129,15 @@ void displayExim(void)
     UG_PutString(MAX_X/2 + xspacer, y, displayState.solarWatts);
     
     if (displayState.import) UG_SetForecolor(C_RED); else UG_SetForecolor(C_GREEN);
-    UG_PutString(xspacer * 4, y += yspacer, blank);
-    UG_PutString(xspacer * 4, y           , displayState.eximWatts);
+    UG_PutString(xspacer * 5, y += yspacer, blank);
+    UG_PutString(xspacer * 5, y           , displayState.eximWatts);
 
     UG_SetForecolor(HOUSE_COLOR);
-    UG_PutString(xspacer, y += yspacer, blank);
-    UG_PutString(xspacer, y           , displayState.houseWatthours);
+    UG_PutString(0, y += yspacer, blank);
+    UG_PutString(0, y           , displayState.houseWatthours);
     UG_SetForecolor(SOLAR_COLOR);
-    UG_PutString(MAX_X/2 + xspacer, y, blank);
-    UG_PutString(MAX_X/2 + xspacer, y, displayState.solarWatthours);
+    UG_PutString(MAX_X/2, y, blank);
+    UG_PutString(MAX_X/2, y, displayState.solarWatthours);
     
     UG_FontSelect(&FONT_6X8);
 }
