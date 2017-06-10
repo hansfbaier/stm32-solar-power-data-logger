@@ -32,6 +32,9 @@ void updateSolarImp(int imps, int watts, int watthours)
 {
     displayState._solarWatts = watts;
     updateImport();
+    displayState.solarImps[0] = 0; 
+    displayState.solarWatts[0] = 0; 
+    displayState.solarWatthours[0] = 0; 
     sprintf(displayState.solarImps,      "%4d",   imps);
     sprintf(displayState.solarWatts,     "%4dW",  watts);
     sprintf(displayState.solarWatthours, "%4dWh", watthours);
@@ -41,6 +44,9 @@ void updateHouseImp(int imps, int watts, int watthours)
 {
     displayState._houseWatts = watts;
     updateImport();
+    displayState.houseImps[0] = 0; 
+    displayState.houseWatts[0] = 0; 
+    displayState.houseWatthours[0] = 0; 
     sprintf(displayState.houseImps,      "%4d",   imps);
     sprintf(displayState.houseWatts,     "%4dW",  watts);
     sprintf(displayState.houseWatthours, "%4dWh", watthours);
