@@ -112,7 +112,7 @@ void redrawGraph()
 void displayExim(void)
 {
     int y;
-    const int yspacer = 58;
+    const int yspacer = 45;
     const int xspacer = 20;
     
     UG_FontSelect(&FONT_24X40);
@@ -126,7 +126,7 @@ void displayExim(void)
     UG_PutString(MAX_X/2 + xspacer, y, displayState.solarWatts);
     
     if (displayState.import) UG_SetForecolor(C_RED); else UG_SetForecolor(C_GREEN);
-    UG_PutString(xspacer * 3, y += yspacer, displayState.eximWatts);
+    UG_PutString(xspacer * 4, y += yspacer, displayState.eximWatts);
     
     UG_FontSelect(&FONT_6X8);
 }
