@@ -174,6 +174,15 @@ void vDisplayTask(void * pvArg)
             }
             else if (UPDATE_DISPLAY == event)
             {
+                UG_SetForecolor(C_WHITE);
+                sprintf(buf, "%5d", TIM_GetCounter(TIM2));
+
+                UG_PutString(MAX_CONSOLE_X + 7, 0,  buf);
+                UG_PutString(MAX_CONSOLE_X + 56, 0, Time_As_String());
+
+                displaySolarImp();
+                displayHouseImp();
+                
                 if (IMPORT_EXPORT == displayState.mode)
                 {
                     displayExim();
@@ -243,14 +252,7 @@ void vLoggerTask(void * pvArg)
         }
 
         if (xQueueReceive(slotQueue, &seconds, 1 * portTICK_RATE_MS))
-        {            
-            UG_SetForecolor(C_WHITE);
-            char buf[10];
-            sprintf(buf, "%5d", TIM_GetCounter(TIM2));
-
-            UG_PutString(MAX_CONSOLE_X + 7, 0,  buf);
-            UG_PutString(MAX_CONSOLE_X + 56, 0, Time_As_String());
-            
+        {                        
             displayEvent = UPDATE_DISPLAY;
             xQueueSend(displayQueue, &displayEvent, 1 * portTICK_RATE_MS);
             
