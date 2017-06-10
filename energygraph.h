@@ -27,8 +27,7 @@
 #define MAX_BIN_X NUM_BINS
 #define CONSOLE_START_Y     (9)
 #define CONSOLE_END_Y       (MAX_BIN_Y)
-#define IMPS_Y         (27)
-#define WATTS_Y        (18)
+#define IMPS_Y         (18)
 #define WATTHOURSDAY_Y (9)
 #define Y_RANGE (MAX_Y - MAX_BIN_Y)
 

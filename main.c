@@ -195,6 +195,8 @@ void vDisplayTask(void * pvArg)
 
                 displaySolarImp();
                 displayHouseImp();
+
+		eximDisplayTime();
                 
                 if (false && IMPORT_EXPORT == displayState.mode)
                 {

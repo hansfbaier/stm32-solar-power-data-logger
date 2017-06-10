@@ -34,7 +34,10 @@ void updateSolarImp(int imps, int watts, int watthours)
     updateImport();
     sprintf(displayState.solarImps,      "%4d",   imps);
     sprintf(displayState.solarWatts,     "%4dW",  watts);
-    sprintf(displayState.solarWatthours, "%4dWh", watthours);
+    if (watthours / 1000 > 10)
+        sprintf(displayState.solarWatthours, "%5d ", watthours);
+    else
+        sprintf(displayState.solarWatthours, "%4dWh", watthours);
 }
 
 void updateHouseImp(int imps, int watts, int watthours)
@@ -43,24 +46,23 @@ void updateHouseImp(int imps, int watts, int watthours)
     updateImport();
     sprintf(displayState.houseImps,      "%4d",   imps);
     sprintf(displayState.houseWatts,     "%4dW",  watts);
-    sprintf(displayState.houseWatthours, "%4dWh", watthours);
+    if (watthours / 1000 > 10)
+        sprintf(displayState.houseWatthours, "%5d ", watthours);
+    else
+        sprintf(displayState.houseWatthours, "%4dWh", watthours);
 }
 
 void displaySolarImp(void)
 {
     UG_SetForecolor(SOLAR_COLOR);
-    //UG_PutString(SOLAR_X, IMPS_Y,         displayState.solarImps);
-    UG_PutString(SOLAR_X, WATTS_Y,        "        ");
-    UG_PutString(SOLAR_X, WATTS_Y,        displayState.solarWatts);
+    UG_PutString(SOLAR_X, IMPS_Y,         displayState.solarImps);
     UG_PutString(SOLAR_X, WATTHOURSDAY_Y, displayState.solarWatthours);
 }
 
 void displayHouseImp(void)
 {
     UG_SetForecolor(HOUSE_COLOR);
-    //UG_PutString(HOUSE_X, IMPS_Y,         displayState.houseImps);
-    UG_PutString(HOUSE_X, WATTS_Y,        "        ");
-    UG_PutString(HOUSE_X, WATTS_Y,        displayState.houseWatts);
+    UG_PutString(HOUSE_X, IMPS_Y,         displayState.houseImps);
     UG_PutString(HOUSE_X, WATTHOURSDAY_Y, displayState.houseWatthours);
 }
 
@@ -116,7 +118,7 @@ void redrawGraph()
 
 const int yspacer = 45;
 const int xspacer = 24;
-const char *blank = "       ";
+const char *exim_blank = "      ";
 
 void eximDisplayTime(void)
 {
@@ -130,9 +132,9 @@ void eximDisplayHouse(void)
 {
     UG_FontSelect(&FONT_24X40);
     UG_SetForecolor(HOUSE_COLOR);
-    UG_PutString(xspacer, EXIM_WATTS_Y, blank);
+    UG_PutString(xspacer, EXIM_WATTS_Y, exim_blank);
     UG_PutString(xspacer, EXIM_WATTS_Y, displayState.houseWatts);
-    UG_PutString(0, EXIM_WH_Y, blank);
+    UG_PutString(0, EXIM_WH_Y, exim_blank);
     UG_PutString(0, EXIM_WH_Y, displayState.houseWatthours);
     UG_FontSelect(&FONT_6X8);
 }
@@ -141,9 +143,9 @@ void eximDisplaySolar(void)
 {
     UG_FontSelect(&FONT_24X40);
     UG_SetForecolor(SOLAR_COLOR);
-    UG_PutString(MAX_X/2 + xspacer, EXIM_WATTS_Y, blank);
+    UG_PutString(MAX_X/2 + xspacer, EXIM_WATTS_Y, exim_blank);
     UG_PutString(MAX_X/2 + xspacer, EXIM_WATTS_Y, displayState.solarWatts);
-    UG_PutString(MAX_X/2, EXIM_WH_Y, blank);
+    UG_PutString(MAX_X/2, EXIM_WH_Y, exim_blank);
     UG_PutString(MAX_X/2, EXIM_WH_Y, displayState.solarWatthours);
     UG_FontSelect(&FONT_6X8);
 }
@@ -152,8 +154,8 @@ void eximDisplayExim(void)
 {
     UG_FontSelect(&FONT_24X40);
     if (displayState.import) UG_SetForecolor(C_RED); else UG_SetForecolor(C_GREEN);
-    UG_PutString(xspacer * 5, EXIM_EXIM_Y, blank);
-    UG_PutString(xspacer * 5, EXIM_EXIM_Y, displayState.eximWatts);
+    UG_PutString(xspacer * 4, EXIM_EXIM_Y, exim_blank);
+    UG_PutString(xspacer * 4, EXIM_EXIM_Y, displayState.eximWatts);
     UG_FontSelect(&FONT_6X8);
 }
 
