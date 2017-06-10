@@ -139,23 +139,35 @@ void vDisplayTask(void * pvArg)
             if (SOLAR_IMP == event)
             {
                 displaySolarImp();
+
                 if (ENERGY_GRAPH == displayState.mode) plotBin(solarLogger.currentBinNo);
-                else displayExim();
+                else
+                {
+                    eximDisplaySolar();
+                    eximDisplayExim();
+                }
             } 
             else if (HOUSE_IMP == event)
             {
                 displayHouseImp();
                 if (ENERGY_GRAPH == displayState.mode) plotBin(houseLogger.currentBinNo);
-                else displayExim();
+                else
+                {
+                    eximDisplayHouse();
+                    eximDisplayExim();
+                }
             }     
             else if (NEW_DAY == event)
             {
+                displayState.mode = ENERGY_GRAPH;
                 redrawGraphGrid();
                 sprintf(buf, "Day %d", (int)(RTC_GetCounter() / ONE_DAY));
             }
             else if (NEW_BIN == event)
             {
                 if (ENERGY_GRAPH == displayState.mode) plotBin(getLastBinNo(&solarLogger));
+                printZeroedCounters();
+                SD_TotalSize();
             }
             else if (MODE_CHANGE == event)
             {
@@ -169,6 +181,7 @@ void vDisplayTask(void * pvArg)
                         
                     case IMPORT_EXPORT:
                         clearGraphArea();
+                        displayExim();
                         break;
                 }
             }
@@ -183,7 +196,7 @@ void vDisplayTask(void * pvArg)
                 displaySolarImp();
                 displayHouseImp();
                 
-                if (IMPORT_EXPORT == displayState.mode)
+                if (false && IMPORT_EXPORT == displayState.mode)
                 {
                     displayExim();
                 }
@@ -262,8 +275,6 @@ void vLoggerTask(void * pvArg)
                 newBin(&solarLogger);
                 newBin(&houseLogger);
                 configASSERT(solarLogger.currentBinNo == houseLogger.currentBinNo);
-                printZeroedCounters();
-                SD_TotalSize();
                 
                 Write_Log_Entry();
                 displayEvent = NEW_BIN;

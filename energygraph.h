@@ -40,7 +40,12 @@ void clearGraphArea(void);
 void clearDetailsArea(void);
 void redrawGraphGrid(void);
 void redrawGraph(void);
+
 void displayExim(void);
+void eximDisplayTime(void);
+void eximDisplayHouse(void);
+void eximDisplaySolar(void);
+void eximDisplayExim(void);
 
 typedef enum 
 {
