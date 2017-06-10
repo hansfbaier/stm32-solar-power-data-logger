@@ -32,9 +32,6 @@ void updateSolarImp(int imps, int watts, int watthours)
 {
     displayState._solarWatts = watts;
     updateImport();
-    displayState.solarImps[0] = 0; 
-    displayState.solarWatts[0] = 0; 
-    displayState.solarWatthours[0] = 0; 
     sprintf(displayState.solarImps,      "%4d",   imps);
     sprintf(displayState.solarWatts,     "%4dW",  watts);
     sprintf(displayState.solarWatthours, "%4dWh", watthours);
@@ -44,9 +41,6 @@ void updateHouseImp(int imps, int watts, int watthours)
 {
     displayState._houseWatts = watts;
     updateImport();
-    displayState.houseImps[0] = 0; 
-    displayState.houseWatts[0] = 0; 
-    displayState.houseWatthours[0] = 0; 
     sprintf(displayState.houseImps,      "%4d",   imps);
     sprintf(displayState.houseWatts,     "%4dW",  watts);
     sprintf(displayState.houseWatthours, "%4dWh", watthours);
@@ -119,7 +113,8 @@ void displayExim(void)
 {
     int y;
     const int yspacer = 45;
-    const int xspacer = 20;
+    const int xspacer = 24;
+    const char *blank = "       ";
     
     UG_FontSelect(&FONT_24X40);
     UG_SetForecolor(C_WHITE);
@@ -127,16 +122,21 @@ void displayExim(void)
     UG_PutString(xspacer * 2, y, Time_As_String());
 
     UG_SetForecolor(HOUSE_COLOR);
-    UG_PutString(xspacer, y += yspacer, displayState.houseWatts);
+    UG_PutString(xspacer, y += yspacer, blank);
+    UG_PutString(xspacer, y           , displayState.houseWatts);
     UG_SetForecolor(SOLAR_COLOR);
+    UG_PutString(MAX_X/2 + xspacer, y, blank);
     UG_PutString(MAX_X/2 + xspacer, y, displayState.solarWatts);
     
     if (displayState.import) UG_SetForecolor(C_RED); else UG_SetForecolor(C_GREEN);
-    UG_PutString(xspacer * 4, y += yspacer, displayState.eximWatts);
+    UG_PutString(xspacer * 4, y += yspacer, blank);
+    UG_PutString(xspacer * 4, y           , displayState.eximWatts);
 
     UG_SetForecolor(HOUSE_COLOR);
-    UG_PutString(xspacer, y += yspacer, displayState.houseWatthours);
+    UG_PutString(xspacer, y += yspacer, blank);
+    UG_PutString(xspacer, y           , displayState.houseWatthours);
     UG_SetForecolor(SOLAR_COLOR);
+    UG_PutString(MAX_X/2 + xspacer, y, blank);
     UG_PutString(MAX_X/2 + xspacer, y, displayState.solarWatthours);
     
     UG_FontSelect(&FONT_6X8);
