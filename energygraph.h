@@ -35,8 +35,12 @@
 #define MAX_DISP_IMPS 160
 
 void plotBin(int binNo);
-void printZeroedCounters();
-void clearGraph();
+void printZeroedCounters(void);
+void clearGraphArea(void);
+void clearDetailsArea(void);
+void redrawGraphGrid(void);
+void redrawGraph(void);
+void displayExim(void);
 
 typedef enum 
 {
@@ -50,6 +54,8 @@ typedef enum
     NEW_BIN,
     SOLAR_IMP,
     HOUSE_IMP,
+    MODE_CHANGE,
+    UPDATE_DISPLAY,
 } DisplayEvent;
 
 typedef struct 

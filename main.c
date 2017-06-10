@@ -48,15 +48,18 @@ void PrintFileError(FRESULT res, const char message[]);
 #define IWDG_TASK_STACK_SIZE       ( configMINIMAL_STACK_SIZE )
 #define UART_TASK_STACK_SIZE       ( configMINIMAL_STACK_SIZE )
 #define DISPLAY_TASK_STACK_SIZE    ( 150 )
+#define MODE_TASK_STACK_SIZE       ( configMINIMAL_STACK_SIZE )
 
 #define IWDG_TASK_PRIORITY         ( tskIDLE_PRIORITY + 4 )
 #define LOGGER_TASK_PRIORITY		( tskIDLE_PRIORITY + 3 )
 #define UART_TASK_PRIORITY         ( tskIDLE_PRIORITY + 2 )
 #define DISPLAY_TASK_PRIORITY      ( tskIDLE_PRIORITY + 1 )
+#define MODE_TASK_PRIORITY         ( tskIDLE_PRIORITY     )
 
 /* Private function prototypes -----------------------------------------------*/
 static void prvSetupHardware(void);
 
+void vModeTask(void *pvArg);
 void vDisplayTask(void *pvArg);
 void vLoggerTask(void *pvArg);
 void vIwdgTask(void *pvArg);
@@ -86,6 +89,7 @@ int main(void)
     xTaskCreate(vUartTask,    (signed char * ) NULL, UART_TASK_STACK_SIZE,    NULL, UART_TASK_PRIORITY,    NULL);
     xTaskCreate(vLoggerTask,  (signed char * ) NULL, LOGGER_TASK_STACK_SIZE,  NULL, LOGGER_TASK_PRIORITY,  NULL);
     xTaskCreate(vDisplayTask, (signed char * ) NULL, DISPLAY_TASK_STACK_SIZE, NULL, DISPLAY_TASK_PRIORITY, NULL);
+    xTaskCreate(vModeTask,    (signed char * ) NULL, MODE_TASK_STACK_SIZE,    NULL, MODE_TASK_PRIORITY,    NULL);
     
     /* Start the scheduler. */
     vTaskStartScheduler();
@@ -97,9 +101,33 @@ extern EnergyLogger solarLogger;
 extern EnergyLogger houseLogger;
 extern DisplayState displayState;
 
+void vModeTask(void *pvArg)
+{
+    (void)pvArg;
+    
+    vTaskDelay(5000 * portTICK_RATE_MS);
+    
+    while(1)
+    {
+        DisplayEvent event;
+        
+        vTaskDelay(4000 * portTICK_RATE_MS);
+        displayState.mode = ENERGY_GRAPH;
+        
+        event = MODE_CHANGE;
+        xQueueSend(displayQueue, &event, 100 * portTICK_RATE_MS);
+        
+        vTaskDelay(4000 * portTICK_RATE_MS);
+        displayState.mode = IMPORT_EXPORT;
+        event = MODE_CHANGE;
+        xQueueSend(displayQueue, &event, 100 * portTICK_RATE_MS);
+    }
+}
+
 void vDisplayTask(void * pvArg)
 {   
     (void)pvArg;
+    static char buf[16];
     
     displayQueue = xQueueCreate(10, sizeof(DisplayEvent));
     
@@ -113,12 +141,43 @@ void vDisplayTask(void * pvArg)
             {
                 displaySolarImp();
                 if (ENERGY_GRAPH == displayState.mode) plotBin(solarLogger.currentBinNo);
+                else displayExim();
             } 
             else if (HOUSE_IMP == event)
             {
                 displayHouseImp();
                 if (ENERGY_GRAPH == displayState.mode) plotBin(houseLogger.currentBinNo);
-            }            
+                else displayExim();
+            }     
+            else if (NEW_DAY == event)
+            {
+                redrawGraphGrid();
+                sprintf(buf, "Day %d", (int)(RTC_GetCounter() / ONE_DAY));
+            }
+            else if (NEW_BIN == event)
+            {
+                if (ENERGY_GRAPH == displayState.mode) plotBin(getLastBinNo(&solarLogger));
+            }
+            else if (MODE_CHANGE == event)
+            {
+                switch (displayState.mode)
+                {
+                    case ENERGY_GRAPH:
+                        redrawGraph();
+                        break;
+                        
+                    case IMPORT_EXPORT:
+                        clearGraphArea();
+                        break;
+                }
+            }
+            else if (UPDATE_DISPLAY == event)
+            {
+                if (IMPORT_EXPORT == displayState.mode)
+                {
+                    displayExim();
+                }
+            }
         }
     }
 }
@@ -129,9 +188,9 @@ void vLoggerTask(void * pvArg)
     EnergyLogger *logger;
     int seconds;
 
-    clearGraph();
+    redrawGraphGrid();
     
-    //Init_Logging();
+    Init_Logging();
     
     impQueue  = xQueueCreate(10, sizeof(EnergyLogger *));
     slotQueue = xQueueCreate(10, sizeof(int));
@@ -146,7 +205,8 @@ void vLoggerTask(void * pvArg)
         uint32_t currentRtc = RTC_GetCounter();
         if (0 == currentRtc % ONE_DAY)
         {
-            clearGraph();
+            displayEvent = NEW_DAY;
+            xQueueSend(displayQueue, &displayEvent, 10 * portTICK_RATE_MS);
         }
         
         if (xQueueReceive(impQueue, &logger, 1 * portTICK_RATE_MS))
@@ -186,9 +246,13 @@ void vLoggerTask(void * pvArg)
             UG_SetForecolor(C_WHITE);
             char buf[10];
             sprintf(buf, "%5d", TIM_GetCounter(TIM2));
-            UG_PutString(MAX_CONSOLE_X + 7, 0, buf);
 
+            UG_PutString(MAX_CONSOLE_X + 7, 0,  buf);
             UG_PutString(MAX_CONSOLE_X + 56, 0, Time_As_String());
+            
+            displayEvent = UPDATE_DISPLAY;
+            xQueueSend(displayQueue, &displayEvent, 1 * portTICK_RATE_MS);
+            
             if (0 == seconds)
             {
                 configASSERT(solarLogger.currentBinNo == houseLogger.currentBinNo);
@@ -198,12 +262,14 @@ void vLoggerTask(void * pvArg)
                 printZeroedCounters();
                 SD_TotalSize();
                 
-                plotBin(getLastBinNo(&solarLogger));
                 Write_Log_Entry();
+                displayEvent = NEW_BIN;
+                xQueueSend(displayQueue, &displayEvent, 10 * portTICK_RATE_MS);
                 
                 if (0 == solarLogger.currentBinNo)
                 {
-                    clearGraph();
+                    displayEvent = NEW_DAY;
+                    xQueueSend(displayQueue, &displayEvent, 10 * portTICK_RATE_MS);
                 }
             }
         }
@@ -216,12 +282,12 @@ void vIwdgTask(void *pvArg)
     while (1)
     {
         IWDG_ReloadCounter();
-        vTaskDelay(2000);
+        vTaskDelay(2000 * portTICK_RATE_MS);
     }
 }
 
 #define BUFSIZE 512
-char buf[BUFSIZE];
+char uart_buf[BUFSIZE];
 
 void vUartTask(void *pvArg)
 {
@@ -237,11 +303,11 @@ void vUartTask(void *pvArg)
         uint8_t command = USART_ReceiveData(USART1) & 0xFF;
         if ('S' == command)
         {
-            sprintf(buf, "%d,%d\n", solarLogger.impsToday, houseLogger.impsToday);
+            sprintf(uart_buf, "%d,%d\n", solarLogger.impsToday, houseLogger.impsToday);
 
-            for (int i = 0; 0 != buf[i]; i++)
+            for (int i = 0; 0 != uart_buf[i]; i++)
             {
-                putf_serial(NULL, buf[i]);
+                putf_serial(NULL, uart_buf[i]);
             }
         }
         else if ('L' == command)
@@ -255,7 +321,7 @@ void vUartTask(void *pvArg)
 
             while (!f_eof(&logfile))
             {
-                res = f_read(&logfile, buf, BUFSIZE, &bytes_read);
+                res = f_read(&logfile, uart_buf, BUFSIZE, &bytes_read);
                 if (FR_OK != res)
                 {
                     PrintFileError(res, "during total read");
@@ -264,7 +330,7 @@ void vUartTask(void *pvArg)
                 
                 for (unsigned int i=0; i < bytes_read; i++)
                 {
-                    putf_serial(NULL, buf[i]);
+                    putf_serial(NULL, uart_buf[i]);
                 }
             }
             
@@ -287,7 +353,7 @@ void vUartTask(void *pvArg)
             setCurrentBinFromRtc();
         }
         
-        vTaskDelay(100);
+        vTaskDelay(100 * portTICK_RATE_MS);
     }
 }
 
