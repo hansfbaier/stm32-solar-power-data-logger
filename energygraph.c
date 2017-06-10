@@ -12,6 +12,7 @@
 #include "printf.h"
 
 UG_GUI gui;
+DisplayState displayState;
 
 extern EnergyLogger solarLogger;
 extern EnergyLogger houseLogger;
@@ -19,9 +20,52 @@ extern EnergyLogger houseLogger;
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
+static void updateImport(void)
+{
+    displayState.import = displayState._solarWatts < displayState._houseWatts;
+    int eximWatts = displayState._solarWatts - displayState._houseWatts;
+    sprintf(displayState.eximWatts, "%5dW", eximWatts);
+}
+
+void updateSolarImp(int imps, int watts, int watthours)
+{
+    displayState._solarWatts = watts;
+    updateImport();
+    sprintf(displayState.solarImps,      "%4d",   imps);
+    sprintf(displayState.solarWatts,     "%4dW",  watts);
+    sprintf(displayState.solarWatthours, "%4dWh", watthours);
+}
+
+void updateHouseImp(int imps, int watts, int watthours)
+{
+    displayState._houseWatts = watts;
+    updateImport();
+    sprintf(displayState.houseImps,      "%4d",   imps);
+    sprintf(displayState.houseWatts,     "%4dW",  watts);
+    sprintf(displayState.houseWatthours, "%4dWh", watthours);
+}
+
+void displaySolarImp()
+{
+    UG_SetForecolor(SOLAR_COLOR);
+    UG_PutString(SOLAR_X, IMPS_Y,         displayState.solarImps);
+    UG_PutString(SOLAR_X, WATTS_Y,        "        ");
+    UG_PutString(SOLAR_X, WATTS_Y,        displayState.solarWatts);
+    UG_PutString(SOLAR_X, WATTHOURSDAY_Y, displayState.solarWatthours);
+}
+
+void displayHouseImp()
+{
+    UG_SetForecolor(HOUSE_COLOR);
+    UG_PutString(HOUSE_X, IMPS_Y,         displayState.houseImps);
+    UG_PutString(HOUSE_X, WATTS_Y,        "        ");
+    UG_PutString(HOUSE_X, WATTS_Y,        displayState.houseWatts);
+    UG_PutString(HOUSE_X, WATTHOURSDAY_Y, displayState.houseWatthours);
+}
+
 void clearGraph()
 {
-    char buf[15];
+    static char buf[15];
     sprintf(buf, "Day %d", (int)(RTC_GetCounter() / ONE_DAY));
     UG_SetForecolor(C_WHITE);
     UG_PutString(MAX_X/2 - 2 * 9, 0, buf);
@@ -31,8 +75,8 @@ void clearGraph()
     float hundredWattsY = pixelsPerImp * 100.0f / WATT_PER_IMP_AND_BIN;
     float y = MAX_Y - hundredWattsY;
     while (y > MAX_BIN_Y) {
-      UG_DrawLine(0, (UG_S16)y, MAX_BIN_X, (UG_S16)y, GRID_COLOR);
-      y -= hundredWattsY;
+        UG_DrawLine(0, (UG_S16)y, MAX_BIN_X, (UG_S16)y, GRID_COLOR);
+        y -= hundredWattsY;
     }
 }
 

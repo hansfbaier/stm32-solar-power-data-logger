@@ -47,22 +47,28 @@ void PrintFileError(FRESULT res, const char message[]);
 #define LOGGER_TASK_STACK_SIZE		( 150 )
 #define IWDG_TASK_STACK_SIZE       ( configMINIMAL_STACK_SIZE )
 #define UART_TASK_STACK_SIZE       ( configMINIMAL_STACK_SIZE )
+#define DISPLAY_TASK_STACK_SIZE    ( 150 )
 
-#define IWDG_TASK_PRIORITY         ( tskIDLE_PRIORITY + 3 )
-#define LOGGER_TASK_PRIORITY		( tskIDLE_PRIORITY + 2 )
-#define UART_TASK_PRIORITY         ( tskIDLE_PRIORITY + 1 )
+#define IWDG_TASK_PRIORITY         ( tskIDLE_PRIORITY + 4 )
+#define LOGGER_TASK_PRIORITY		( tskIDLE_PRIORITY + 3 )
+#define UART_TASK_PRIORITY         ( tskIDLE_PRIORITY + 2 )
+#define DISPLAY_TASK_PRIORITY      ( tskIDLE_PRIORITY + 1 )
 
 /* Private function prototypes -----------------------------------------------*/
 static void prvSetupHardware(void);
+
+void vDisplayTask(void *pvArg);
 void vLoggerTask(void *pvArg);
 void vIwdgTask(void *pvArg);
 void vUartTask(void *pvArg);
+
 void putchar(char ch);
 static void putf_serial(void * dummy, char ch);
 static void putf_gui(void * dummy, char ch);
 
-xQueueHandle impQueue  = NULL;
-xQueueHandle slotQueue = NULL;
+xQueueHandle impQueue     = NULL;
+xQueueHandle slotQueue    = NULL;
+xQueueHandle displayQueue = NULL;
 
 int main(void)
 {
@@ -76,9 +82,11 @@ int main(void)
     
     if (RESET != iwdgReset) { printf("\nIWDG-RESET"); }
     
-    xTaskCreate(vIwdgTask,   (signed char * ) NULL, IWDG_TASK_STACK_SIZE,   NULL, IWDG_TASK_PRIORITY,   NULL);
-    xTaskCreate(vLoggerTask, (signed char * ) NULL, LOGGER_TASK_STACK_SIZE, NULL, LOGGER_TASK_PRIORITY, NULL);
-    xTaskCreate(vUartTask,   (signed char * ) NULL, UART_TASK_STACK_SIZE,   NULL, UART_TASK_PRIORITY,   NULL);
+    xTaskCreate(vIwdgTask,    (signed char * ) NULL, IWDG_TASK_STACK_SIZE,    NULL, IWDG_TASK_PRIORITY,    NULL);
+    xTaskCreate(vUartTask,    (signed char * ) NULL, UART_TASK_STACK_SIZE,    NULL, UART_TASK_PRIORITY,    NULL);
+    xTaskCreate(vLoggerTask,  (signed char * ) NULL, LOGGER_TASK_STACK_SIZE,  NULL, LOGGER_TASK_PRIORITY,  NULL);
+    xTaskCreate(vDisplayTask, (signed char * ) NULL, DISPLAY_TASK_STACK_SIZE, NULL, DISPLAY_TASK_PRIORITY, NULL);
+    
     /* Start the scheduler. */
     vTaskStartScheduler();
 
@@ -87,6 +95,33 @@ int main(void)
 
 extern EnergyLogger solarLogger;
 extern EnergyLogger houseLogger;
+extern DisplayState displayState;
+
+void vDisplayTask(void * pvArg)
+{   
+    (void)pvArg;
+    
+    displayQueue = xQueueCreate(10, sizeof(DisplayEvent));
+    
+    while(1)
+    {
+        DisplayEvent event;
+        
+        if (xQueueReceive(displayQueue, &event, 100 * portTICK_RATE_MS))
+        {
+            if (SOLAR_IMP == event)
+            {
+                displaySolarImp();
+                if (ENERGY_GRAPH == displayState.mode) plotBin(solarLogger.currentBinNo);
+            } 
+            else if (HOUSE_IMP == event)
+            {
+                displayHouseImp();
+                if (ENERGY_GRAPH == displayState.mode) plotBin(houseLogger.currentBinNo);
+            }            
+        }
+    }
+}
 
 void vLoggerTask(void * pvArg)
 {   
@@ -95,9 +130,8 @@ void vLoggerTask(void * pvArg)
     int seconds;
 
     clearGraph();
-    static char buf[16];
     
-    Init_Logging();
+    //Init_Logging();
     
     impQueue  = xQueueCreate(10, sizeof(EnergyLogger *));
     slotQueue = xQueueCreate(10, sizeof(int));
@@ -107,34 +141,23 @@ void vLoggerTask(void * pvArg)
     
     while (1)
     {
+        DisplayEvent displayEvent;
+        
         uint32_t currentRtc = RTC_GetCounter();
         if (0 == currentRtc % ONE_DAY)
         {
             clearGraph();
         }
         
-        if (xQueueReceive(impQueue, &logger, 10))
+        if (xQueueReceive(impQueue, &logger, 1 * portTICK_RATE_MS))
         {
             configASSERT(NULL != logger);
             addImp(logger);
             
-            int impsThisBin = getCurrentBin(logger);
-            sprintf(buf, "%4d", impsThisBin);
-            
-#ifdef DISPLAY_WATTS
-            char watts[10];
+            int impsThisBin        = getCurrentBin(logger);
             int millisSinceLastImp = (logger->impTimer - logger->lastImpTimer) / 2;
-            int wattsUsed = 2250000 / millisSinceLastImp;
-            sprintf(watts, "%4dW", wattsUsed);
-#endif
-            
-            char watthours[10];
-            int wattHoursThisBin = (1000 * impsThisBin) / 1600;
-            sprintf(watthours, "%4dWh", wattHoursThisBin);
-            
-            char watthoursday[10];
-            int wattHoursToday = (1000 * logger->impsToday) / 1600;
-            sprintf(watthoursday, "%4dWh", wattHoursToday);            
+            int wattsUsed          = 2250000 / millisSinceLastImp;
+            int wattHoursToday     = (1000 * logger->impsToday) / 1600;
             
             if (&solarLogger == logger)
             {
@@ -142,14 +165,9 @@ void vLoggerTask(void * pvArg)
                 vTaskDelay(10);                
                 GPIO_ResetBits(GPIOB, GPIO_Pin_1);
                 
-                UG_SetForecolor(SOLAR_COLOR);
-                UG_PutString(SOLAR_X, IMPS_Y,         buf);
-                UG_PutString(SOLAR_X, WATTS_Y,        "        ");
-#ifdef DISPLAY_WATTS
-                UG_PutString(SOLAR_X, WATTS_Y,        watts);
-#endif
-                UG_PutString(SOLAR_X, WATTHOURS_Y,    watthours);
-                UG_PutString(SOLAR_X, WATTHOURSDAY_Y, watthoursday);
+                updateSolarImp(impsThisBin, wattsUsed, wattHoursToday);
+                displayEvent = SOLAR_IMP;
+                xQueueSend(displayQueue, &displayEvent, 1 * portTICK_RATE_MS);
             }
             else if (&houseLogger == logger)
             {
@@ -157,22 +175,16 @@ void vLoggerTask(void * pvArg)
                 vTaskDelay(10);     
                 GPIO_ResetBits(GPIOB, GPIO_Pin_0);
                 
-                UG_SetForecolor(HOUSE_COLOR);
-                UG_PutString(HOUSE_X, IMPS_Y,         buf);
-                UG_PutString(HOUSE_X, WATTS_Y,        "        ");
-#ifdef DISPLAY_WATTS
-                UG_PutString(HOUSE_X, WATTS_Y,        watts);
-#endif
-                UG_PutString(HOUSE_X, WATTHOURS_Y,    watthours);
-                UG_PutString(HOUSE_X, WATTHOURSDAY_Y, watthoursday);
-            }
-            
-            plotBin(solarLogger.currentBinNo);
+                updateHouseImp(impsThisBin, wattsUsed, wattHoursToday);    
+                displayEvent = HOUSE_IMP;
+                xQueueSend(displayQueue, &displayEvent, 1 * portTICK_RATE_MS);
+            }            
         }
 
-        if (xQueueReceive(slotQueue, &seconds, 10))
+        if (xQueueReceive(slotQueue, &seconds, 1 * portTICK_RATE_MS))
         {            
             UG_SetForecolor(C_WHITE);
+            char buf[10];
             sprintf(buf, "%5d", TIM_GetCounter(TIM2));
             UG_PutString(MAX_CONSOLE_X + 7, 0, buf);
 

@@ -9,6 +9,7 @@
 #define ENERGYGRAPH_H_
 
 #include "logging.h"
+#include "stdbool.h"
 
 #define SOLAR_COLOR C_YELLOW
 #define HOUSE_COLOR C_BLUE
@@ -27,8 +28,7 @@
 #define CONSOLE_START_Y     (9)
 #define CONSOLE_END_Y       (MAX_BIN_Y)
 #define IMPS_Y         (27)
-#define WATTS_Y        (36)
-#define WATTHOURS_Y    (18)
+#define WATTS_Y        (18)
 #define WATTHOURSDAY_Y (9)
 #define Y_RANGE (MAX_Y - MAX_BIN_Y)
 
@@ -37,5 +37,43 @@
 void plotBin(int binNo);
 void printZeroedCounters();
 void clearGraph();
+
+typedef enum 
+{
+    ENERGY_GRAPH,
+    IMPORT_EXPORT,
+} DisplayMode;
+
+typedef enum
+{
+    NEW_DAY,
+    NEW_BIN,
+    SOLAR_IMP,
+    HOUSE_IMP,
+} DisplayEvent;
+
+typedef struct 
+{
+    DisplayMode mode;
+    int _solarWatts;
+    int _houseWatts;
+
+    char solarImps [10];
+    char solarWatts[10];
+    char houseImps [10];
+    char houseWatts[10];
+    
+    bool import;
+    char eximWatts [10];
+
+    char solarWatthours[10];
+    char houseWatthours[10];
+    
+} DisplayState;
+
+void updateSolarImp(int imps, int watts, int watthours);
+void updateHouseImp(int imps, int watts, int watthours);
+void displaySolarImp();
+void displayHouseImp();
 
 #endif /* ENERGYGRAPH_H_ */
