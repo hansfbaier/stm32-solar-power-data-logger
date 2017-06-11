@@ -16,8 +16,10 @@ __IO uint32_t TimeDisplay = 0;
 uint32_t Time_Regulate(void)
 {
   uint32_t Tmp_HH = 0xFF, Tmp_MM = 0xFF, Tmp_SS = 0xFF;
+  
+  int days = (int)(RTC_GetCounter() / ONE_DAY);
 
-  printf("\r\n==============Time Settings=====================================");
+  printf("\r\n======= Set Clock ========");
   printf("\r\n  Please Set Hours");
 
   while (Tmp_HH == 0xFF)
@@ -39,7 +41,7 @@ uint32_t Time_Regulate(void)
   printf(":  %d", Tmp_SS);
 
   /* Return the value to store in RTC counter register */
-  return((Tmp_HH*3600 + Tmp_MM*60 + Tmp_SS));
+  return((Tmp_HH*3600 + Tmp_MM*60 + Tmp_SS) + ONE_DAY * days);
 }
 
 void Time_Adjust(void)
