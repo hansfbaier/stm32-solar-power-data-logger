@@ -161,13 +161,13 @@ void vDisplayTask(void * pvArg)
             {
                 displayState.mode = ENERGY_GRAPH;
                 redrawGraphGrid();
-                sprintf(buf, "Day %d", (int)(RTC_GetCounter() / ONE_DAY));
             }
             else if (NEW_BIN == event)
             {
                 if (ENERGY_GRAPH == displayState.mode) plotBin(getLastBinNo(&solarLogger));
                 printZeroedCounters();
                 SD_TotalSize();
+                sprintf(buf, "Day %d", (int)(RTC_GetCounter() / ONE_DAY));
             }
             else if (MODE_CHANGE == event)
             {
