@@ -168,6 +168,7 @@ void vDisplayTask(void * pvArg)
                 printZeroedCounters();
                 SD_TotalSize();
                 sprintf(buf, "Day %d", (int)(RTC_GetCounter() / ONE_DAY));
+                UG_PutString(DAY_X, 0, buf);
             }
             else if (MODE_CHANGE == event)
             {

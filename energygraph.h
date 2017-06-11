@@ -18,6 +18,7 @@
 #define WATT_HOURS_PER_IMP (0.625f)
 #define WATT_PER_IMP_AND_BIN (7.5f)
 #define BOTTOM MAX_Y
+#define DAY_X (MAX_X/2)
 #define MAX_CONSOLE_X (MAX_X - 112)
 #define SOLAR_X       (MAX_CONSOLE_X + 56)
 #define HOUSE_X       (MAX_CONSOLE_X)
