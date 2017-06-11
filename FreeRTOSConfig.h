@@ -112,5 +112,7 @@ to exclude the API function. */
 #define xPortPendSVHandler PendSV_Handler
 #define xPortSysTickHandler SysTick_Handler
 
+#define configASSERT(x) if((x) == 0) assert_failed(__FILE__, __LINE__)
+
 #endif /* FREERTOS_CONFIG_H */
 
