@@ -167,8 +167,6 @@ void vDisplayTask(void * pvArg)
                 if (ENERGY_GRAPH == displayState.mode) plotBin(getLastBinNo(&solarLogger));
                 printZeroedCounters();
                 SD_TotalSize();
-                sprintf(buf, "Day %d", (int)(RTC_GetCounter() / ONE_DAY));
-                UG_PutString(DAY_X, 0, buf);
             }
             else if (MODE_CHANGE == event)
             {
@@ -189,20 +187,17 @@ void vDisplayTask(void * pvArg)
             else if (UPDATE_DISPLAY == event)
             {
                 UG_SetForecolor(C_WHITE);
-                sprintf(buf, "%5d", TIM_GetCounter(TIM2));
 
+                sprintf(buf, "Day %d", (int)(RTC_GetCounter() / ONE_DAY));
+                UG_PutString(DAY_X, 0, buf);
+                sprintf(buf, "%5d", TIM_GetCounter(TIM2));		
                 UG_PutString(MAX_CONSOLE_X + 7, 0,  buf);
                 UG_PutString(MAX_CONSOLE_X + 56, 0, Time_As_String());
 
                 displaySolarImp();
                 displayHouseImp();
 
-                eximDisplayTime();
-                
-                if (false && IMPORT_EXPORT == displayState.mode)
-                {
-                    displayExim();
-                }
+                eximDisplayTime();                
             }
         }
     }

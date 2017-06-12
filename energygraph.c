@@ -81,7 +81,6 @@ static char buf[15];
 void redrawGraphGrid()
 {
     UG_SetForecolor(C_WHITE);
-    UG_PutString(MAX_X/2 - 2 * 9, 0, buf);
 
     clearDetailsArea();
     clearGraphArea();
