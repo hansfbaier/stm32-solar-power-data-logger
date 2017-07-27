@@ -15,12 +15,19 @@ __IO uint32_t TimeDisplay = 0;
 
 uint32_t Time_Regulate(void)
 {
-  uint32_t Tmp_HH = 0xFF, Tmp_MM = 0xFF, Tmp_SS = 0xFF;
+  uint32_t TMP_Day = 0xFF, Tmp_HH = 0xFF, Tmp_MM = 0xFF, Tmp_SS = 0xFF;
   
   int days = (int)(RTC_GetCounter() / ONE_DAY);
 
-  printf("\r\nday %d\r\n", days);
   printf("\r\n======= Set Clock ========");
+  printf("\r\n  Please Set Day");
+
+  while (Tmp_Day == 0xFF)
+  {
+    Tmp_Day = USART_Scanf(50000);
+  }
+  printf(":  %d", Tmp_Day);
+  
   printf("\r\n  Please Set Hours");
 
   while (Tmp_HH == 0xFF)
