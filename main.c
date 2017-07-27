@@ -367,6 +367,8 @@ void vUartTask(void *pvArg)
             init_printf(NULL, putf_serial);
             PWR_BackupAccessCmd(ENABLE);
             BKP_WriteBackupRegister(BKP_DR1, 0);
+            //BKP_WriteBackupRegister(BKP_DR2, (int)(RTC_GetCounter() / ONE_DAY));
+            BKP_WriteBackupRegister(BKP_DR2, 288);
             NVIC_SystemReset();
         }
         
