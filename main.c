@@ -360,9 +360,15 @@ void vUartTask(void *pvArg)
         else if ('C' == command)
         {
             init_printf(NULL, putf_serial);
+            RTC_WaitForSynchro();
+            RTC_ITConfig(RTC_IT_SEC, DISABLE);
+            RTC_WaitForLastTask();
             PWR_BackupAccessCmd(ENABLE);
             Time_Adjust();
             PWR_BackupAccessCmd(DISABLE);
+            RTC_WaitForSynchro();
+            RTC_ITConfig(RTC_IT_SEC, ENABLE);
+            RTC_WaitForLastTask();
             init_printf(NULL, putf_gui);
             setCurrentBinFromRtc();
         }
