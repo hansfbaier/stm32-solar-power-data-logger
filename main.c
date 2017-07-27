@@ -360,8 +360,11 @@ void vUartTask(void *pvArg)
         else if ('C' == command)
         {
             init_printf(NULL, putf_serial);
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);
             PWR_BackupAccessCmd(ENABLE);
             BKP_WriteBackupRegister(BKP_DR1, 0);
+            printf("New Backup Register value: %d", BKP_ReadBackupRegister(BKP_DR1));
+            PWR_BackupAccessCmd(DISABLE);
             NVIC_SystemReset();
         }
         
