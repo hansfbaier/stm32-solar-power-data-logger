@@ -363,7 +363,9 @@ void vUartTask(void *pvArg)
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);
             PWR_BackupAccessCmd(ENABLE);
             BKP_WriteBackupRegister(BKP_DR1, 0);
-            printf("New Backup Register value: %d", BKP_ReadBackupRegister(BKP_DR1));
+            printf("clock set backup register: %d", BKP_ReadBackupRegister(BKP_DR1));
+            BKP_WriteBackupRegister(BKP_DR2, (int)(RTC_GetCounter() / ONE_DAY));
+            printf("days backup register: %d", BKP_ReadBackupRegister(BKP_DR2));
             PWR_BackupAccessCmd(DISABLE);
             NVIC_SystemReset();
         }
