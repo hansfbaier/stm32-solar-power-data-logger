@@ -220,7 +220,7 @@ void Restore_Today(void)
         return;
     }
     
-    int day = 0;
+    int day = -1;
     int today = TODAY;
     do
     {
@@ -248,6 +248,8 @@ void Restore_Today(void)
         
         plotBin(bin);
     }
+    
+    setCurrentBinFromRtc();
     
     bye:
     res = f_lseek(&fsrc, fsrc.fsize);
