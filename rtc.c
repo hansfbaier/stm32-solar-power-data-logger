@@ -19,6 +19,7 @@ uint32_t Time_Regulate(void)
   
   int days = (int)(RTC_GetCounter() / ONE_DAY);
 
+  printf("\r\nday %d\r\n", days);
   printf("\r\n======= Set Clock ========");
   printf("\r\n  Please Set Hours");
 
@@ -27,12 +28,14 @@ uint32_t Time_Regulate(void)
     Tmp_HH = USART_Scanf(23);
   }
   printf(":  %d", Tmp_HH);
+  
   printf("\r\n  Please Set Minutes");
   while (Tmp_MM == 0xFF)
   {
     Tmp_MM = USART_Scanf(59);
   }
   printf(":  %d", Tmp_MM);
+  
   printf("\r\n  Please Set Seconds");
   while (Tmp_SS == 0xFF)
   {

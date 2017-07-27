@@ -360,19 +360,9 @@ void vUartTask(void *pvArg)
         else if ('C' == command)
         {
             init_printf(NULL, putf_serial);
-            RTC_WaitForSynchro();
-            RTC_ITConfig(RTC_IT_SEC, DISABLE);
-            RTC_WaitForLastTask();
             PWR_BackupAccessCmd(ENABLE);
-            RTC_EnterConfigMode();
-            Time_Adjust();
-            RTC_ExitConfigMode();
-            RTC_WaitForSynchro();
-            RTC_ITConfig(RTC_IT_SEC, ENABLE);
-            RTC_WaitForLastTask();
-            PWR_BackupAccessCmd(DISABLE);
-            init_printf(NULL, putf_gui);
-            setCurrentBinFromRtc();
+            BKP_WriteBackupRegister(BKP_DR1, 0);
+            NVIC_SystemReset();
         }
         
         vTaskDelay(100 * portTICK_RATE_MS);
