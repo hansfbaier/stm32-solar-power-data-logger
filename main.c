@@ -360,7 +360,9 @@ void vUartTask(void *pvArg)
         else if ('C' == command)
         {
             init_printf(NULL, putf_serial);
+            PWR_BackupAccessCmd(ENABLE);
             Time_Adjust();
+            PWR_BackupAccessCmd(DISABLE);
             init_printf(NULL, putf_gui);
             setCurrentBinFromRtc();
         }
