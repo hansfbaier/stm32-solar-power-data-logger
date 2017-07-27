@@ -364,11 +364,13 @@ void vUartTask(void *pvArg)
             RTC_ITConfig(RTC_IT_SEC, DISABLE);
             RTC_WaitForLastTask();
             PWR_BackupAccessCmd(ENABLE);
+            RTC_EnterConfigMode();
             Time_Adjust();
-            PWR_BackupAccessCmd(DISABLE);
+            RTC_ExitConfigMode();
             RTC_WaitForSynchro();
             RTC_ITConfig(RTC_IT_SEC, ENABLE);
             RTC_WaitForLastTask();
+            PWR_BackupAccessCmd(DISABLE);
             init_printf(NULL, putf_gui);
             setCurrentBinFromRtc();
         }
