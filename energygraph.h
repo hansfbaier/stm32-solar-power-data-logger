@@ -15,7 +15,7 @@
 #define HOUSE_COLOR C_BLUE
 #define GRID_COLOR C_CHOCOLATE
 
-#define WATT_HOURS_PER_IMP (0.625f)
+#define WATT_HOURS_PER_IMP (1.0f)
 #define WATT_PER_IMP_AND_BIN (7.5f)
 #define BOTTOM MAX_Y
 #define DAY_X (MAX_X/2 - 2*8)

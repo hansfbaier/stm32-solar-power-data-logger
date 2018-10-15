@@ -20,6 +20,8 @@ extern EnergyLogger solarLogger;
 extern EnergyLogger houseLogger;
 extern char *uart_buf;
 
+#define DEBOUNCE_MS 500
+
 #define FIVE_MINUTES (60 * 5)
 void RTC_IRQHandler(void)
 {
@@ -51,7 +53,7 @@ void EXTI0_IRQHandler(void)
         unsigned long impTimer = get_timer();
 
         // debounce house meter output
-        if (impTimer - solarLogger.impTimer > 200)
+        if (impTimer - solarLogger.impTimer > DEBOUNCE_MS)
         {
             EnergyLogger *solarLoggerPtr = &solarLogger;
             solarLogger.lastImpTimer = solarLogger.impTimer;
@@ -73,7 +75,7 @@ void EXTI1_IRQHandler(void)
         unsigned long impTimer = get_timer();
       
         // debounce house meter output
-        if (impTimer - houseLogger.impTimer > 200)
+        if (impTimer - houseLogger.impTimer > DEBOUNCE_MS)
         {
             EnergyLogger *houseLoggerPtr = &houseLogger;
             houseLogger.lastImpTimer = houseLogger.impTimer;
