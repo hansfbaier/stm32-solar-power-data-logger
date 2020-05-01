@@ -9,7 +9,7 @@ much much happier.
 
 Original:
 
-This is a skeleton project for an STM32F10x series device, using the
+This is derived from a skeleton project for an STM32F10x series device, using the
 GCC compiler (either vanilla or CodeSourcery).
 
 It is initially configured for a medium density STM32F103.
